@@ -11,6 +11,7 @@ from .irc import Protocol, Message
 
 # TODO: Exception handling
 
+# TODO: Create a thread pool for long running plugins
 class Bot:
     def __init__(self, loop=None):
         self.config = BotConfig()
@@ -71,6 +72,7 @@ class Bot:
         self.plugins.append(plugin)
 
     def run(self):
+        """Run the bot and wait for it to die"""
         # These are modules which contain multiple plugins. All
         # plugins which are found in these modules will be loaded.
         for module in self.config.get('PLUGIN_MODULES', []):
@@ -111,15 +113,18 @@ class Bot:
                                                 ssl=ssl_ctx)
 
         transport, protocol = self.loop.run_until_complete(connector)
+
+        # TODO: This run_forever probably shouldn't be here.
         self.loop.run_forever()
 
     # IRC helpers go here
 
     def write(self, *args, **kwargs):
-        """Simple proxy to the irc.Protocol.write"""
+        """Simple proxy to the irc.Protocol.write method"""
         return self.client.write(*args, **kwargs)
 
     def mention_reply(self, event, msg):
+        """Reply to and mention the user in the given event"""
         # If the event came from a channel, prepend the nick it came from
         if event.from_channel():
             msg = '%s: %s' % (event.identity.name, msg)
@@ -127,6 +132,7 @@ class Bot:
         self.reply(event, msg)
 
     def reply(self, event, msg):
+        """Convenience function which replies to a message"""
         if len(event.args) < 1 or len(event.args[0]) < 1:
             raise ValueError('Invalid IRC event')
 

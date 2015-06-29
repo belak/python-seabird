@@ -26,8 +26,18 @@ def ensure_callback_metadata(callback):
     return callback
 
 
+# TODO: Create a 'help' builtin command
+# TODO: Ensure a command is only registered to one plugin
 @optional_args
 def command(callback, name=None, short_help=None, full_help=None):
+    """Register a function to be used as a command event handler
+
+    This decorator takes the name of the command, the single line help
+    and the extended help.
+
+    If short_help and full_help are unused, it will attempt to pull
+    this information from the function's docstring.
+    """
     ensure_callback_metadata(callback)
 
     if name is None:
@@ -55,10 +65,18 @@ def command(callback, name=None, short_help=None, full_help=None):
     return callback
 
 
-def event(*args):
+def event(first, *args):
+    """Register a function to be used as a raw event handler
+
+    This function takes the names of one or more IRC events and
+    returns a decorator which will add metadata to functions which is
+    used for plugin initialization.
+    """
     def decorator(callback):
         ensure_callback_metadata(callback)
 
+        # Make sure all the metadata gets added.
+        callback._sb_meta.events.append(first)
         for arg in args:
             callback._sb_meta.events.append(arg)
 
