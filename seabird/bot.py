@@ -1,9 +1,14 @@
 import asyncio
+from collections import namedtuple
 from importlib import import_module
 import ssl
+from types import ModuleType
 
 from .config import BotConfig
-from .irc import Protocol
+from .irc import Protocol, Message
+
+
+CommandCallback = namedtuple('CommandCallback', ['meta', 'func'])
 
 
 # TODO: Exception handling
@@ -26,7 +31,7 @@ class PluginMetadata:
                     raise KeyError('Command %s already registered '
                                    'for this plugin' % command.name)
 
-                self.commands[command] = func
+                self.commands[command.name] = CommandCallback(func_meta, func)
 
             for event in func_meta.events:
                 if event not in self.events:
@@ -38,8 +43,9 @@ class PluginMetadata:
         for func in self.events.get(event.event, []):
             func(bot, event)
 
-    def dispatch_command(self, cmd):
-        raise NotImplementedError
+    def dispatch_command(self, bot, cmd):
+        if cmd.event in self.commands:
+            self.commands[cmd.event].func(bot, cmd)
 
 
 class Bot:
@@ -55,23 +61,64 @@ class Bot:
         self.loop = loop
 
     def dispatch(self, msg):
+        cmd = None
+        if (msg.event == "PRIVMSG" and
+                msg.trailing.startswith(self.config['PREFIX'])):
+            cmd = Message(msg.line)
+
+            # Remove the last arg so we can recreate it. Note that we
+            # skip the prefix.
+            split = cmd.trailing[len(self.config['PREFIX']):].split(' ', 1)
+            cmd.event = split[0]
+
+            # Replace trailing
+            cmd.trailing = ''
+            if len(split) > 1:
+                cmd.trailing = split[1]
+
+            # Replace the last arg
+            cmd.args.pop()
+            cmd.args.append(cmd.trailing)
+
         for plugin in self.plugins:
             plugin._sb_meta.dispatch_event(self, msg)
 
-        # TODO: Dispatch command
+            # Dispatch the command if we have it
+            if cmd is not None:
+                plugin._sb_meta.dispatch_command(self, cmd)
+
+    def _load_plugin(self, module, name):
+        # NOTE: This can take either a module or a string
+        # TODO: This can fail if parent modules are not imported
+        if type(module) != ModuleType:
+            module = import_module(module)
+
+        plugin_class = getattr(module, name)
+        plugin = plugin_class(self)
+
+        # Now that we have a plugin, we can generate the metadata
+        # for it
+        plugin._sb_meta = PluginMetadata(plugin)
+
+        self.plugins.append(plugin)
 
     def run(self):
-        for module, name in self.config['PLUGIN_CLASSES']:
-            # TODO: This can fail if parent modules are not imported
-            plugin_module = import_module(module)
-            plugin_class = getattr(plugin_module, name)
-            plugin = plugin_class(self)
+        for module in self.config.get('PLUGIN_MODULES', []):
+            print('Loading module %s' % module)
 
-            # Now that we have a plugin, we can generate the metadata
-            # for it
-            plugin._sb_meta = PluginMetadata(plugin)
+            mod = import_module(module)
+            for name, cls in mod.__dict__.items():
+                if not isinstance(cls, type):
+                    continue
 
-            self.plugins.append(plugin)
+                if not getattr(cls, '_sb_plugin', False):
+                    continue
+
+                print('Loading plugin %s.%s' % (module, name))
+                self._load_plugin(mod, name)
+
+        for module, name in self.config.get('PLUGIN_CLASSES', {}):
+            self._load_plugin(module, name)
 
         ssl_ctx = None
         if self.config['SSL']:
@@ -92,3 +139,19 @@ class Bot:
     def write(self, *args, **kwargs):
         """Simple proxy to the irc.Protocol.write"""
         return self.client.write(*args, **kwargs)
+
+    def mention_reply(self, event, msg):
+        # If the event came from a channel, prepend the nick it came from
+        if event.from_channel():
+            msg = '%s: %s' % (event.identity.name, msg)
+
+        self.reply(event, msg)
+
+    def reply(self, event, msg):
+        if len(event.args) < 1 or len(event.args[0]) < 1:
+            raise ValueError('Invalid IRC event')
+
+        if event.from_channel():
+            self.write(('PRIVMSG', event.args[0]), trailing=msg)
+        else:
+            self.write(('PRIVMSG', event.identity.name), trailing=msg)

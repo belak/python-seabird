@@ -20,8 +20,7 @@ class CommandMetadata:
         return self.name.__hash__()
 
     def __eq__(self, other):
-        # Note: Pook man's equal
-        return self.name == other.name
+        return self.name == other
 
     def __repr__(self):
         return '<CommandMetadata: %s>' % self.name
@@ -32,6 +31,11 @@ def ensure_callback_metadata(callback):
         callback._sb_meta = CallbackMetadata()
 
     return callback
+
+
+def plugin(cls):
+    cls._sb_plugin = True
+    return cls
 
 
 @optional_args

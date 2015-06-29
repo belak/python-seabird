@@ -16,6 +16,26 @@ def _decode_tag(data):
     return data
 
 
+class Identity:
+    def __init__(self, raw):
+        self.raw = raw
+        self.user = None
+        self.host = None
+        self.name = None
+
+        split = raw.split('@', 1)
+        if len(split) != 2:
+            return
+
+        self.user, self.host = split
+
+        split = self.user.split('!', 1)
+        if len(split) != 2:
+            return
+
+        self.name, self.user = split
+
+
 # TODO: Debug logging
 # TODO: Documentation
 # TODO: Parse hostmask
@@ -41,11 +61,13 @@ class Message:
                     self.tags[tag[0]] = None
 
         self.hostmask = None
+        self.identity = None
         if line.startswith(':'):
             # This is similar to the above line. We skip the first
             # char because we don't care about it, then split on the
             # first space.
             self.hostmask, line = line[1:].split(' ', 1)
+            self.identity = Identity(self.hostmask)
 
         self.trailing = None
 
@@ -63,6 +85,16 @@ class Message:
         # If trailing isn't none, we add it back to the args
         if self.trailing is not None:
             self.args.append(self.trailing)
+
+    def from_channel(self):
+        if len(self.args) < 1:
+            return False
+
+        loc = self.args[0]
+        if loc.startswith('#') or loc.startswith('&'):
+            return True
+
+        return False
 
 
 class Protocol(asyncio.Protocol):
@@ -90,7 +122,7 @@ class Protocol(asyncio.Protocol):
 
             # Because we're only looking for \n in the sake of
             # compatibility, we strip any trailing \r characters.
-            line.rstrip('\r')
+            line = line.rstrip('\r')
 
             # We got a line!
             print('<< %s' % line)

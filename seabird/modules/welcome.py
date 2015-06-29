@@ -1,6 +1,7 @@
-from seabird.decorators import event
+from seabird.decorators import plugin, event
 
 
+@plugin
 class WelcomePlugin:
     def __init__(self, bot):
         pass
