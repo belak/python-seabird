@@ -30,8 +30,6 @@ Event registration
 * event
 * interval
 * mention
-* nick_command
-* plugin
 
 Limitations
 
@@ -43,44 +41,26 @@ Modifications
 
 * threaded
 
-### Sample
+### Sample Plugin
 
 ```python
-# utils.py
-def decorator(func):
-	@functools.wraps(func)
-	def actual_decorator(*args, **kwargs):
-		if len(args) == 1 && callable(args[0]):
-			return func(args[0])
-		else:
-			return func
-# init.py
-bot = SeaPrince()
-bot.config.from_object('config')
-
-# plugins/roulette.py
-import random
-from . import bot
-
-@bot.plugin
-class Roulette():
-	_gun_size = None
-	_channel_counter = {}
-
+class Roulette:
 	def __init__(self, bot, **kwargs):
+	    self._channel_counter = {}
 		self._gun_size = bot.config.get('ROULETTE_GUN_SIZE', 6)
 
-	@bot.command
+	@command
 	def roulette(self, bot, event):
-		rounds_left = self._channel_counter.get(event.channel, -1)
+		rounds_left = self._channel_counter.get(event.args[0], -1)
 		if rounds_left == -1:
-			event.reply("Reloading the gun.")
+			bot.reply(event, "Reloading the gun.")
 			rounds_left = random.randint(1, 6)
 
 		rounds_left -= 1
 		if rounds_left <= 0:
-			event.reply("Bang!")
+			bot.reply(event, "Bang!")
 		else:
-			event.reply("Click!")
+		    bot.reply(event, "Click!")
+
 		self._channel_counter[event.channel] = rounds_left
 ```
