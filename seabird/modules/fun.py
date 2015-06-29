@@ -1,15 +1,12 @@
 import random
 import re
 
-from ..decorators import command, event, plugin
+from seabird.decorators import command, event
+from seabird.plugin import Plugin
 
 
-@plugin
-class CoinPlugin:
+class CoinPlugin(Plugin):
     _coin_names = ['heads', 'tails']
-
-    def __init__(self, bot):
-        pass
 
     @command
     def coin(self, bot, event):
@@ -32,12 +29,8 @@ class CoinPlugin:
                       trailing="Sorry! Better luck next time!")
 
 
-@plugin
-class DicePlugin:
+class DicePlugin(Plugin):
     dice_re = re.compile('(?:^|\b)(\d*)d(\d+)\b')
-
-    def __init__(self, bot):
-        pass
 
     @event('PRIVMSG')
     def dice_callback(self, bot, event):
@@ -46,8 +39,7 @@ class DicePlugin:
             print(match.group(2))
 
 
-@plugin
-class RoulettePlugin:
+class RoulettePlugin(Plugin):
     def __init__(self, bot):
         self._channel_counter = {}
         self._gun_size = bot.config.get('ROULETTE_GUN_SIZE', 6)

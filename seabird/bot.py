@@ -1,52 +1,15 @@
 import asyncio
-from collections import namedtuple
 from importlib import import_module
+import inspect
 import ssl
 from types import ModuleType
 
 from .config import BotConfig
+from .plugin import Plugin
 from .irc import Protocol, Message
 
 
-CommandCallback = namedtuple('CommandCallback', ['meta', 'func'])
-
-
 # TODO: Exception handling
-class PluginMetadata:
-    def __init__(self, plugin):
-        self.commands = {}
-        self.events = {}
-
-        for func_name in dir(plugin):
-            func = getattr(plugin, func_name)
-            if not hasattr(func, '_sb_meta'):
-                continue
-
-            # This is just because I don't want to keep referring to
-            # it as func._sb_meta
-            func_meta = func._sb_meta
-
-            for command in func_meta.commands:
-                if command.name in self.commands:
-                    raise KeyError('Command %s already registered '
-                                   'for this plugin' % command.name)
-
-                self.commands[command.name] = CommandCallback(func_meta, func)
-
-            for event in func_meta.events:
-                if event not in self.events:
-                    self.events[event] = []
-
-                self.events[event].append(func)
-
-    def dispatch_event(self, bot, event):
-        for func in self.events.get(event.event, []):
-            func(bot, event)
-
-    def dispatch_command(self, bot, cmd):
-        if cmd.event in self.commands:
-            self.commands[cmd.event].func(bot, cmd)
-
 
 class Bot:
     def __init__(self, loop=None):
@@ -94,32 +57,48 @@ class Bot:
             module = import_module(module)
 
         plugin_class = getattr(module, name)
+
+        if Plugin not in inspect.getmro(plugin_class):
+            raise TypeError('Class %s.%s is not a valid Plugin' %
+                            (module.__name__, name))
+
         plugin = plugin_class(self)
 
         # Now that we have a plugin, we can generate the metadata
         # for it
-        plugin._sb_meta = PluginMetadata(plugin)
+        plugin.generate_metadata()
 
         self.plugins.append(plugin)
 
     def run(self):
+        # These are modules which contain multiple plugins. All
+        # plugins which are found in these modules will be loaded.
         for module in self.config.get('PLUGIN_MODULES', []):
             print('Loading module %s' % module)
 
             mod = import_module(module)
-            for name, cls in mod.__dict__.items():
-                if not isinstance(cls, type):
+
+            # This is a simple function which will filter out any
+            # classes which aren't from the current plugin module
+            # (such as imports)
+            def valid_mod(member):
+                return inspect.isclass(member) and member.__module__ == module
+
+            for name, obj in inspect.getmembers(mod, valid_mod):
+                # We attempt to load all classes, but ignore the
+                # failures
+                try:
+                    self._load_plugin(mod, name)
+                except TypeError:
                     continue
 
-                if not getattr(cls, '_sb_plugin', False):
-                    continue
+                print('Loaded plugin %s.%s' % (module, name))
 
-                print('Loading plugin %s.%s' % (module, name))
-                self._load_plugin(mod, name)
-
+        # These are all plugins which are explicitly loaded
         for module, name in self.config.get('PLUGIN_CLASSES', {}):
             self._load_plugin(module, name)
 
+        # Create an SSL context if we asked for one
         ssl_ctx = None
         if self.config['SSL']:
             ssl_ctx = ssl.create_default_context()

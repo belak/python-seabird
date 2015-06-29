@@ -45,10 +45,12 @@ def command(callback, name=None, short_help=None, full_help=None):
     if name is None:
         name = callback.__name__
 
-    # This portion is roughly based off of pydoc.splitdoc
-    short_help = None
-    full_help = None
-    if callback.__doc__ is not None:
+    # This portion is roughly based off of pydoc.splitdoc.  Note that
+    # we only pull from the __doc__ string if both short_help and
+    # long_help are None.
+    if (short_help is None and
+            full_help is None and
+            callback.__doc__ is not None):
         lines = callback.__doc__.strip().splitlines()
         if len(lines) == 1:
             short_help = lines[0]
