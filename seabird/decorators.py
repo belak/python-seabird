@@ -26,11 +26,6 @@ def ensure_callback_metadata(callback):
     return callback
 
 
-def plugin(cls):
-    cls._sb_plugin = True
-    return cls
-
-
 @optional_args
 def command(callback, name=None, short_help=None, full_help=None):
     ensure_callback_metadata(callback)
