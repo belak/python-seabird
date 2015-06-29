@@ -15,13 +15,6 @@ class CommandMetadata:
         self.short_help = short_help
         self.full_help = full_help
 
-    def __hash__(self):
-        # Note: Poor man's hash
-        return self.name.__hash__()
-
-    def __eq__(self, other):
-        return self.name == other
-
     def __repr__(self):
         return '<CommandMetadata: %s>' % self.name
 
