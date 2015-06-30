@@ -36,9 +36,6 @@ class Identity:
         self.name, self.user = split
 
 
-# TODO: Debug logging
-# TODO: Documentation
-# TODO: Parse hostmask
 class Message:
     def __init__(self, line):
         self.line = line

@@ -9,9 +9,6 @@ from .plugin import Plugin
 from .irc import Protocol, Message
 
 
-# TODO: Exception handling
-
-# TODO: Create a thread pool for long running plugins
 class Bot:
     def __init__(self, loop=None):
         self.config = BotConfig()
@@ -53,7 +50,6 @@ class Bot:
 
     def _load_plugin(self, module, name):
         # NOTE: This can take either a module or a string
-        # TODO: This can fail if parent modules are not imported
         if type(module) != ModuleType:
             module = import_module(module)
 
@@ -113,8 +109,6 @@ class Bot:
                                                 ssl=ssl_ctx)
 
         transport, protocol = self.loop.run_until_complete(connector)
-
-        # TODO: This run_forever probably shouldn't be here.
         self.loop.run_forever()
 
     # IRC helpers go here

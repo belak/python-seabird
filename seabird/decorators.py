@@ -26,8 +26,6 @@ def ensure_callback_metadata(callback):
     return callback
 
 
-# TODO: Create a 'help' builtin command
-# TODO: Ensure a command is only registered to one plugin
 @optional_args
 def command(callback, name=None, short_help=None, full_help=None):
     """Register a function to be used as a command event handler
