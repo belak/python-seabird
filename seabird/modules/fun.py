@@ -60,3 +60,24 @@ class RoulettePlugin(Plugin):
             bot.reply(event, "Click!")
 
         self._channel_counter[event.args[0]] = rounds_left
+
+
+class MentionsPlugin(Plugin):
+    @event('PRIVMSG')
+    def mentions(self, bot, event):
+        if not event.trailing.startswith(bot.current_nick + ': '):
+            return
+
+        vals = {
+            'ping': 'pong',
+            'scoobysnack': 'Scooby Dooby Doo!',
+            'scooby snack': 'Scooby Dooby Doo!',
+            'botsnack': ':)',
+            'bot snack': ':)',
+        }
+
+        trailing = event.trailing[len(bot.current_nick)+2:].strip().lower()
+        if trailing not in vals:
+            return
+
+        bot.mention_reply(event, vals[trailing])

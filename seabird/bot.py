@@ -21,7 +21,15 @@ class Bot:
 
         self.loop = loop
 
+        self.current_nick = ''
+
     def dispatch(self, msg):
+        # Update the current nick
+        if msg.event == '001':
+            self.current_nick = msg.args[0]
+        elif msg.event == 'NICK' and msg.identity.name == self.current_nick:
+            self.current_nick = msg.args[0]
+
         cmd = None
         if (msg.event == "PRIVMSG" and
                 msg.trailing.startswith(self.config['PREFIX'])):
@@ -69,6 +77,9 @@ class Bot:
 
     def run(self):
         """Run the bot and wait for it to die"""
+        # Make sure to set the current nick
+        self.current_nick = self.config['NICK']
+
         # These are modules which contain multiple plugins. All
         # plugins which are found in these modules will be loaded.
         for module in self.config.get('PLUGIN_MODULES', []):
