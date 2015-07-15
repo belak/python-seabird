@@ -12,3 +12,5 @@ SSL_VERIFY = True
 
 HOST = 'chat.freenode.net'
 PORT = 6697
+
+PREFIX = '\''
