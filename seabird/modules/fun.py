@@ -41,6 +41,8 @@ class DicePlugin(Plugin):
 
 class RoulettePlugin(Plugin):
     def __init__(self, bot):
+        super().__init__(bot)
+
         self._channel_counter = {}
         self._gun_size = bot.config.get('ROULETTE_GUN_SIZE', 6)
 

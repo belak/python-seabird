@@ -50,7 +50,7 @@ class Plugin:
     _generate_metadata.
     """
     def __init__(self, bot):
-        pass
+        self.bot = bot
 
     def generate_metadata(self):
         self._sb_meta = PluginMetadata(self)
