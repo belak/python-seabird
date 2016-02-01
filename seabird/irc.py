@@ -37,8 +37,9 @@ class Identity:
 
 
 class Message:
-    def __init__(self, line):
+    def __init__(self, line, client=None):
         self.line = line
+        self.client = client
 
         # IRCv3 message tags
         self.tags = {}
@@ -66,13 +67,13 @@ class Message:
             self.hostmask, line = line[1:].split(' ', 1)
             self.identity = Identity(self.hostmask)
 
-        self.trailing = None
 
         # Splitting on the first space followed by a colon is the
         # start of the trailing argument.
+        trailing = None
         args = line.split(' :', 1)
         if len(args) > 1:
-            self.trailing = args[1]
+            trailing = args[1]
 
         # Split the args and grab the first one as the event
         self.args = args[0].split(' ')
@@ -80,18 +81,35 @@ class Message:
         self.args = self.args[1:]
 
         # If trailing isn't none, we add it back to the args
-        if self.trailing is not None:
-            self.args.append(self.trailing)
+        if trailing is not None:
+            self.args.append(trailing)
+
+        self.trailing = self.args[-1]
 
     def from_channel(self):
+        # TODO: Figure out what to do about this. This will only really be valid
+        # for PRIVMSG messages and related other messages.
         if len(self.args) < 1:
             return False
 
+        # The location will either be the channel the message is sent to or the
+        # nick of the bot.
         loc = self.args[0]
-        if loc.startswith('#') or loc.startswith('&'):
-            return True
 
-        return False
+        # If this message was created without a client reference, we need to
+        # make a reasonable guess. Otherwise, just use the current nick.
+        if not self.client:
+            if loc.startswith('#') or loc.startswith('&'):
+                return True
+            return False
+
+        # If the location is the current nick, we know it's a private message.
+        # This saves on mucking about with ISupport and other such nonsense and
+        # lets us keep this as simple as possible.
+        if loc == self.client.current_nick:
+            return False
+
+        return True
 
 
 class Protocol(asyncio.Protocol):
@@ -100,6 +118,8 @@ class Protocol(asyncio.Protocol):
         self.user = user
         self.name = name
         self.password = password
+
+        self.current_nick = nick
 
     def connection_made(self, transport):
         self.transport = transport
@@ -125,12 +145,21 @@ class Protocol(asyncio.Protocol):
             # We got a line!
             print('<< %s' % line)
 
-            msg = Message(line)
+            msg = Message(line, client=self)
+            msg.from_channel()
 
             # The only thing important enough to be in the protocol
             # itself is sending of pongs.
             if msg.event == "PING":
                 self.write("PONG", *msg.args)
+            elif msg.event == "NICK":
+                if msg.identity.name == self.current_nick:
+                    self.current_nick = msg.args[0]
+            elif msg.event == "001":
+                self.current_nick = msg.args[0]
+            elif msg.event == "437" or msg.event == "433":
+                self.current_nick += '_'
+                self.write('NICK', self.current_nick)
 
             # Send the message to whoever's using this
             self.dispatch(msg)
