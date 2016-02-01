@@ -45,22 +45,22 @@ Modifications
 
 ```python
 class Roulette:
-	def __init__(self, bot, **kwargs):
-	    self._channel_counter = {}
-		self._gun_size = bot.config.get('ROULETTE_GUN_SIZE', 6)
+    def __init__(self, bot, **kwargs):
+        self._channel_counter = {}
+        self._gun_size = bot.config.get('ROULETTE_GUN_SIZE', 6)
 
-	@command
-	def roulette(self, bot, event):
-		rounds_left = self._channel_counter.get(event.args[0], -1)
-		if rounds_left == -1:
-			bot.reply(event, "Reloading the gun.")
-			rounds_left = random.randint(1, 6)
+    @command
+    def roulette(self, bot, event):
+        rounds_left = self._channel_counter.get(event.args[0], -1)
+        if rounds_left == -1:
+            bot.reply(event, "Reloading the gun.")
+            rounds_left = random.randint(1, 6)
 
-		rounds_left -= 1
-		if rounds_left <= 0:
-			bot.reply(event, "Bang!")
-		else:
-		    bot.reply(event, "Click!")
+        rounds_left -= 1
+        if rounds_left <= 0:
+            bot.reply(event, "Bang!")
+        else:
+            bot.reply(event, "Click!")
 
-		self._channel_counter[event.channel] = rounds_left
+        self._channel_counter[event.channel] = rounds_left
 ```
