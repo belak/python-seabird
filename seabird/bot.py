@@ -4,15 +4,21 @@ import inspect
 import ssl
 from types import ModuleType
 
-from .config import BotConfig
+from .config import Config
 from .plugin import Plugin
 from .irc import Protocol, Message
 
 
-class Bot:
-    def __init__(self, loop=None):
-        self.config = BotConfig()
-        self.client = Protocol(self.dispatch, self.config)
+class Bot(Protocol):
+    def __init__(self, config, loop=None):
+        self.config = config
+
+        # Initialize the underlying connection
+        super().__init__(self.config['NICK'],
+                         self.config['USER'],
+                         self.config['NAME'],
+                         self.config['PASS'])
+
         self.plugins = []
 
         # If there was no loop, default to grabbing one
@@ -112,9 +118,10 @@ class Bot:
         if self.config['SSL']:
             ssl_ctx = ssl.create_default_context()
             if not self.config['SSL_VERIFY']:
+                ssl_ctx.check_hostname = False
                 ssl_ctx.verify_mode = ssl.CERT_NONE
 
-        connector = self.loop.create_connection(lambda: self.client,
+        connector = self.loop.create_connection(lambda: self,
                                                 host=self.config['HOST'],
                                                 port=self.config['PORT'],
                                                 ssl=ssl_ctx)
@@ -123,10 +130,6 @@ class Bot:
         self.loop.run_forever()
 
     # IRC helpers go here
-
-    def write(self, *args, **kwargs):
-        """Simple proxy to the irc.Protocol.write method"""
-        return self.client.write(*args, **kwargs)
 
     def mention_reply(self, event, msg):
         """Reply to and mention the user in the given event"""
@@ -142,6 +145,6 @@ class Bot:
             raise ValueError('Invalid IRC event')
 
         if event.from_channel():
-            self.write(('PRIVMSG', event.args[0]), trailing=msg)
+            self.write('PRIVMSG', event.args[0], msg)
         else:
-            self.write(('PRIVMSG', event.identity.name), trailing=msg)
+            self.write('PRIVMSG', event.identity.name, msg)

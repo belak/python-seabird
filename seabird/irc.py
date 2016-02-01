@@ -47,7 +47,7 @@ class Message:
             # first character (as it's an @) and we grab the first
             # section (up to the first space) and because we only have
             # one, we split on ; to get the tags in a list.
-            tags = line[1:].split(' ', 1).split(';')
+            tags = line[1:].split(' ', 1)[0].split(';')
 
             # Store all the tags
             for tag, val in tags:
@@ -95,20 +95,21 @@ class Message:
 
 
 class Protocol(asyncio.Protocol):
-    def __init__(self, dispatch, config):
-        self.dispatch = dispatch
-        self.config = config
+    def __init__(self, nick, user, name, password=None):
+        self.nick = nick
+        self.user = user
+        self.name = name
+        self.password = password
 
     def connection_made(self, transport):
         self.transport = transport
         self.buf = ''
 
-        if 'PASS' in self.config:
-            self.write(('PASS', self.config['PASS']))
+        if self.password is not None:
+            self.write('PASS', self.password)
 
-        self.write(('NICK',), self.config['NICK'])
-        self.write(('USER', self.config['USER'], '0.0.0.0', '0.0.0.0'),
-                   trailing=self.config['NAME'])
+        self.write('NICK', self.nick)
+        self.write('USER', self.user, '0.0.0.0', '0.0.0.0', self.name)
 
     def data_received(self, data):
         self.buf += data.decode()
@@ -129,16 +130,23 @@ class Protocol(asyncio.Protocol):
             # The only thing important enough to be in the protocol
             # itself is sending of pongs.
             if msg.event == "PING":
-                self.write(("PONG",), trailing=msg.args[-1])
+                self.write("PONG", *msg.args)
 
             # Send the message to whoever's using this
-            self.dispatch(Message(line))
+            self.dispatch(msg)
 
-    def write(self, args, trailing=None):
+    def write(self, *args):
+        # If the final argument contains a space, it needs to be encoded as a
+        # trailing argument.
+        trailing = None
+        if ' ' in args[-1]:
+            trailing = args[-1]
+            args = args[:-1]
+
         # Create the args portion of the line
         line = ' '.join(args)
 
-        # If there's trailing, write it out
+        # Append trailing if we have any
         if trailing is not None:
             line += ' :' + trailing
 
@@ -151,6 +159,9 @@ class Protocol(asyncio.Protocol):
         # Add in the \r\n and send it
         line += '\r\n'
         self.transport.write(line.encode('utf-8'))
+
+    def dispatch(self, msg):
+        raise NotImplementedError
 
     def connection_lost(self, e):
         # TODO: Handle failures better
