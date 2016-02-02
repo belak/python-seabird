@@ -1,0 +1,5 @@
+[MESSAGES CONTROL]
+disable=missing-docstring,too-few-public-methods,no-self-use,protected-access,fixme
+
+[SIMILARITIES]
+ignore-imports=yes
