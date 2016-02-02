@@ -35,22 +35,19 @@ class PluginMetadata:
 
     def dispatch_event(self, bot, event):
         for func in self.events.get(event.event, []):
-            func(bot, event)
+            func(event)
 
     def dispatch_command(self, bot, cmd):
         if cmd.event in self.commands:
-            self.commands[cmd.event].func(bot, cmd)
+            self.commands[cmd.event].func(cmd)
 
 
 class Plugin:
     """Simple wrapper class to avoid defining a few common things
 
     In order for a class to be a plugin it must inherit from this
-    class. It defines two methods: an empty __init__ and
-    _generate_metadata.
+    class. It defines one method: __init__
     """
     def __init__(self, bot):
         self.bot = bot
-
-    def generate_metadata(self):
         self._sb_meta = PluginMetadata(self)

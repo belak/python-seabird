@@ -4,5 +4,5 @@ from seabird.plugin import Plugin
 
 class WelcomePlugin(Plugin):
     @event('001')
-    def welcome(self, bot, event):
+    def welcome(self, _):
         print('Welcome!')

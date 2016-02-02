@@ -9,32 +9,32 @@ class CoinPlugin(Plugin):
     _coin_names = ['heads', 'tails']
 
     @command
-    def coin(self, bot, event):
+    def coin(self, msg):
         """[heads|tails]
 
         Guess the coin flip. If you guess wrong, you're out!
         """
-        if event.trailing not in CoinPlugin._coin_names:
+        if msg.trailing not in CoinPlugin._coin_names:
             names = ', '.join(CoinPlugin._coin_names)
-            bot.mention_reply(event,
-                              "That's not a valid coin side."
-                              "Options are: %s" % names)
+            self.bot.mention_reply(msg,
+                                   "That's not a valid coin side."
+                                   "Options are: %s" % names)
             return
 
         answer = random.randint(0, len(CoinPlugin._coin_names)-1)
-        if CoinPlugin._coin_names[answer] == event.trailing:
-            bot.mention_reply(event, "Lucky guess!")
+        if CoinPlugin._coin_names[answer] == msg.trailing:
+            self.bot.mention_reply(msg, "Lucky guess!")
         else:
-            bot.write(('KICK', event.args[0], event.prefix.name),
-                      trailing="Sorry! Better luck next time!")
+            self.bot.write('KICK', msg.args[0], msg.prefix.name,
+                           "Sorry! Better luck next time!")
 
 
 class DicePlugin(Plugin):
-    dice_re = re.compile('(?:^|\b)(\d*)d(\d+)\b')
+    dice_re = re.compile(r'(?:^|\b)(\d*)d(\d+)\b')
 
     @event('PRIVMSG')
-    def dice_callback(self, bot, event):
-        for match in DicePlugin.dice_re.finditer(event.trailing):
+    def dice_callback(self, msg):
+        for match in DicePlugin.dice_re.finditer(msg.trailing):
             print(match.group(1))
             print(match.group(2))
 
@@ -44,30 +44,30 @@ class RoulettePlugin(Plugin):
         super().__init__(bot)
 
         self._channel_counter = {}
-        self._gun_size = bot.config.get('ROULETTE_GUN_SIZE', 6)
+        self._gun_size = self.bot.config.get('ROULETTE_GUN_SIZE', 6)
 
     @command
-    def roulette(self, bot, event):
+    def roulette(self, msg):
         """Click... click... BANG!"""
-        rounds_left = self._channel_counter.get(event.args[0], -1)
+        rounds_left = self._channel_counter.get(msg.args[0], -1)
         if rounds_left == -1:
-            bot.reply(event, "Reloading the gun.")
+            self.bot.reply(msg, "Reloading the gun.")
             rounds_left = random.randint(1, 6)
 
         rounds_left -= 1
         if rounds_left <= 0:
-            bot.reply(event, "Bang!")
-            bot.write(('KICK', event.args[0], event.prefix.name))
+            self.bot.reply(msg, "Bang!")
+            self.bot.write('KICK', msg.args[0], msg.prefix.name)
         else:
-            bot.reply(event, "Click!")
+            self.bot.reply(msg, "Click!")
 
-        self._channel_counter[event.args[0]] = rounds_left
+        self._channel_counter[msg.args[0]] = rounds_left
 
 
 class MentionsPlugin(Plugin):
     @event('PRIVMSG')
-    def mentions(self, bot, event):
-        if not event.trailing.startswith(bot.current_nick + ': '):
+    def mentions(self, msg):
+        if not msg.trailing.startswith(self.bot.current_nick + ': '):
             return
 
         vals = {
@@ -78,8 +78,8 @@ class MentionsPlugin(Plugin):
             'bot snack': ':)',
         }
 
-        trailing = event.trailing[len(bot.current_nick)+2:].strip().lower()
+        trailing = msg.trailing[len(self.bot.current_nick)+2:].strip().lower()
         if trailing not in vals:
             return
 
-        bot.mention_reply(event, vals[trailing])
+        self.bot.mention_reply(msg, vals[trailing])

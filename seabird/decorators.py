@@ -83,9 +83,9 @@ def event(first, *args):
     return decorator
 
 
-def interval(interval):
+def interval(callback, time): # noqa # pylint: disable=unused-argument
     raise NotImplementedError
 
 
-def mention(callback):
+def mention(callback): # noqa # pylint: disable=unused-argument
     raise NotImplementedError

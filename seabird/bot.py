@@ -4,7 +4,6 @@ import inspect
 import ssl
 from types import ModuleType
 
-from .config import Config
 from .plugin import Plugin
 from .irc import Protocol, Message
 
@@ -27,7 +26,7 @@ class Bot(Protocol):
 
         self.loop = loop
 
-        self.current_nick = ''
+        self.current_nick = self.config['NICK']
 
     def dispatch(self, msg):
         # Update the current nick
@@ -35,6 +34,9 @@ class Bot(Protocol):
             self.current_nick = msg.args[0]
         elif msg.event == 'NICK' and msg.identity.name == self.current_nick:
             self.current_nick = msg.args[0]
+        elif msg.event == "437" or msg.event == "433":
+            self.current_nick += '_'
+            self.write('NICK', self.current_nick)
 
         cmd = None
         if (msg.event == "PRIVMSG" and
@@ -64,7 +66,7 @@ class Bot(Protocol):
 
     def _load_plugin(self, module, name):
         # NOTE: This can take either a module or a string
-        if type(module) != ModuleType:
+        if not isinstance(module, ModuleType):
             module = import_module(module)
 
         plugin_class = getattr(module, name)
@@ -73,11 +75,8 @@ class Bot(Protocol):
             raise TypeError('Class %s.%s is not a valid Plugin' %
                             (module.__name__, name))
 
+        # Initialize the plugin
         plugin = plugin_class(self)
-
-        # Now that we have a plugin, we can generate the metadata
-        # for it
-        plugin.generate_metadata()
 
         self.plugins.append(plugin)
 
@@ -93,13 +92,12 @@ class Bot(Protocol):
 
             mod = import_module(module)
 
-            # This is a simple function which will filter out any
-            # classes which aren't from the current plugin module
-            # (such as imports)
-            def valid_mod(member):
-                return inspect.isclass(member) and member.__module__ == module
+            for name, obj in inspect.getmembers(mod):
+                # This is a simple check to filter out any classes which aren't
+                # from the current plugin module (such as imports)
+                if not inspect.isclass(obj) or obj.__module__ != module:
+                    continue
 
-            for name, obj in inspect.getmembers(mod, valid_mod):
                 # We attempt to load all classes, but ignore the
                 # failures
                 try:
@@ -126,15 +124,29 @@ class Bot(Protocol):
                                                 port=self.config['PORT'],
                                                 ssl=ssl_ctx)
 
-        transport, protocol = self.loop.run_until_complete(connector)
+        self.loop.run_until_complete(connector)
         self.loop.run_forever()
 
     # IRC helpers go here
 
+    def from_channel(self, event):
+        # TODO: Figure out what to do about this. This will only really be valid
+        # for PRIVMSG messages and related other messages.
+        if len(event.args) < 1:
+            return False
+
+        # If the location is the current nick, we know it's a private message.
+        # This saves on mucking about with ISupport and other such nonsense and
+        # lets us keep this as simple as possible.
+        if event.args[-1] == self.current_nick:
+            return False
+
+        return True
+
     def mention_reply(self, event, msg):
         """Reply to and mention the user in the given event"""
         # If the event came from a channel, prepend the nick it came from
-        if event.from_channel():
+        if self.from_channel(event):
             msg = '%s: %s' % (event.identity.name, msg)
 
         self.reply(event, msg)
@@ -144,7 +156,7 @@ class Bot(Protocol):
         if len(event.args) < 1 or len(event.args[0]) < 1:
             raise ValueError('Invalid IRC event')
 
-        if event.from_channel():
+        if self.from_channel(event):
             self.write('PRIVMSG', event.args[0], msg)
         else:
             self.write('PRIVMSG', event.identity.name, msg)

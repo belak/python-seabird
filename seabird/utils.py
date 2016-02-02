@@ -19,8 +19,8 @@ def optional_args(func):
 
         # If there's more than one arg, they're meant as args to the decorator
         # function, so we pass them through, along with the decorated func.
-        def inner(userFunc):
-            return func(userFunc, *args, **kwargs)
+        def inner(user_func):
+            return func(user_func, *args, **kwargs)
 
         return inner
 
