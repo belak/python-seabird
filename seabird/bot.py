@@ -58,11 +58,11 @@ class Bot(Protocol):
             cmd.args.append(cmd.trailing)
 
         for plugin in self.plugins:
-            plugin._sb_meta.dispatch_event(self, msg)
+            plugin._sb_meta.dispatch_event(msg)
 
             # Dispatch the command if we have it
             if cmd is not None:
-                plugin._sb_meta.dispatch_command(self, cmd)
+                plugin._sb_meta.dispatch_command(cmd)
 
     def _load_plugin(self, module, name):
         # NOTE: This can take either a module or a string

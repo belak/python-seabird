@@ -33,11 +33,11 @@ class PluginMetadata:
 
                 self.events[event].append(func)
 
-    def dispatch_event(self, bot, event):
+    def dispatch_event(self, event):
         for func in self.events.get(event.event, []):
             func(event)
 
-    def dispatch_command(self, bot, cmd):
+    def dispatch_command(self, cmd):
         if cmd.event in self.commands:
             self.commands[cmd.event].func(cmd)
 
