@@ -1,11 +1,13 @@
 import asyncio
 from importlib import import_module
 import inspect
+from pkgutil import iter_modules
 import ssl
 from types import ModuleType
 
 from .plugin import Plugin
 from .irc import Protocol, Message
+from . import modules
 
 
 class Bot(Protocol):
@@ -32,6 +34,8 @@ class Bot(Protocol):
         # Update the current nick
         if msg.event == '001':
             self.current_nick = msg.args[0]
+            for line in self.config.get('CMDS', []):
+                self.write_line(line)
         elif msg.event == 'NICK' and msg.identity.name == self.current_nick:
             self.current_nick = msg.args[0]
         elif msg.event == "437" or msg.event == "433":
@@ -85,31 +89,40 @@ class Bot(Protocol):
         # Make sure to set the current nick
         self.current_nick = self.config['NICK']
 
+        plugin_classes = self.config.get('PLUGIN_CLASSES')
+        plugin_modules = self.config.get('PLUGIN_MODULES')
+        if plugin_classes is None and plugin_modules is None:
+            plugin_modules = []
+            for _, name, _ in iter_modules(modules.__path__, 'seabird.modules.'):
+                plugin_modules.append(name)
+
         # These are modules which contain multiple plugins. All
         # plugins which are found in these modules will be loaded.
-        for module in self.config.get('PLUGIN_MODULES', []):
-            print('Loading module %s' % module)
+        if plugin_modules is not None:
+            for module in plugin_modules:
+                print('Loading module %s' % module)
 
-            mod = import_module(module)
+                mod = import_module(module)
 
-            for name, obj in inspect.getmembers(mod):
-                # This is a simple check to filter out any classes which aren't
-                # from the current plugin module (such as imports)
-                if not inspect.isclass(obj) or obj.__module__ != module:
-                    continue
+                for name, obj in inspect.getmembers(mod):
+                    # This is a simple check to filter out any classes which aren't
+                    # from the current plugin module (such as imports)
+                    if not inspect.isclass(obj) or obj.__module__ != module:
+                        continue
 
-                # We attempt to load all classes, but ignore the
-                # failures
-                try:
-                    self._load_plugin(mod, name)
-                except TypeError:
-                    continue
+                    # We attempt to load all classes, but ignore the
+                    # failures
+                    try:
+                        self._load_plugin(mod, name)
+                    except TypeError:
+                        continue
 
-                print('Loaded plugin %s.%s' % (module, name))
+                    print('Loaded plugin %s.%s' % (module, name))
 
         # These are all plugins which are explicitly loaded
-        for module, name in self.config.get('PLUGIN_CLASSES', {}):
-            self._load_plugin(module, name)
+        if plugin_classes is not None:
+            for module, name in self.config.get('PLUGIN_CLASSES', {}):
+                self._load_plugin(module, name)
 
         # Create an SSL context if we asked for one
         ssl_ctx = None
@@ -125,6 +138,10 @@ class Bot(Protocol):
                                                 ssl=ssl_ctx)
 
         self.loop.run_until_complete(connector)
+
+    def run_forever(self):
+        """Run the bot and wait for it to die"""
+        self.run()
         self.loop.run_forever()
 
     # IRC helpers go here

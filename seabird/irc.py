@@ -151,6 +151,10 @@ class Protocol(asyncio.Protocol):
         # \r\n
         line = line[:510]
 
+
+        self.write_line(line)
+
+    def write_line(self, line):
         print('>> %s' % line)
 
         # Add in the \r\n and send it
