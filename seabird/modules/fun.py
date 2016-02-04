@@ -21,8 +21,8 @@ class CoinPlugin(Plugin):
                                    "Options are: %s" % names)
             return
 
-        answer = random.randint(0, len(CoinPlugin._coin_names)-1)
-        if CoinPlugin._coin_names[answer] == msg.trailing:
+        choice = random.choice(CoinPlugin._coin_names)
+        if choice == msg.trailing:
             self.bot.mention_reply(msg, "Lucky guess!")
         else:
             self.bot.write('KICK', msg.args[0], msg.prefix.name,
@@ -34,9 +34,45 @@ class DicePlugin(Plugin):
 
     @event('PRIVMSG')
     def dice_callback(self, msg):
+        total_count = 0
+        all_rolls = []
         for match in DicePlugin.dice_re.finditer(msg.trailing):
-            print(match.group(1))
-            print(match.group(2))
+            dice_count = int(match.group(1))
+            dice_magnitude = int(match.group(2))
+
+            total_count += dice_count
+
+            if dice_count < 1:
+                # Not enough dice
+                self.bot.mention_reply(
+                    msg,
+                    '%d is not a valid number of dice.' % dice_count)
+                return
+
+            if dice_magnitude < 2:
+                self.bot.mention_reply(
+                    msg,
+                    '%d us not a valid die size.' % dice_magnitude)
+                return
+
+            if dice_magnitude > 100:
+                self.bot.mention_reply(
+                    msg,
+                    'Die of size %d is too large' % dice_magnitude)
+                return
+
+            if total_count > 100:
+                self.bot.mention_reply(msg, 'Too many dice')
+                return
+
+            rolls = ['%dd%d:' % (dice_count, dice_magnitude)]
+            for _ in range(dice_count):
+                rolls.append(str(random.randint(1, dice_magnitude)))
+
+            all_rolls.append(' '.join(rolls))
+
+        if all_rolls:
+            self.bot.mention_reply(msg, ', '.join(all_rolls))
 
 
 class RoulettePlugin(Plugin):
