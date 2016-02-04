@@ -1,5 +1,7 @@
 # seaprince
 
+[![Build Status](https://travis-ci.org/belak/pyseabird.svg?branch=master)](https://travis-ci.org/belak/pyseabird)
+
 AKA The Bot Formerly Known As Seabird
 
 ## Goals
