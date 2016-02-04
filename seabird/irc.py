@@ -66,7 +66,6 @@ class Message:
             self.hostmask, line = line[1:].split(' ', 1)
             self.identity = Identity(self.hostmask)
 
-
         # Splitting on the first space followed by a colon is the
         # start of the trailing argument.
         trailing = None
@@ -150,7 +149,6 @@ class Protocol(asyncio.Protocol):
         # Make sure the line is only 510 characters before adding the
         # \r\n
         line = line[:510]
-
 
         self.write_line(line)
 

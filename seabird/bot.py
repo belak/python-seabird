@@ -93,7 +93,7 @@ class Bot(Protocol):
         plugin_modules = self.config.get('PLUGIN_MODULES')
         if plugin_classes is None and plugin_modules is None:
             plugin_modules = []
-            for _, name, _ in iter_modules(modules.__path__, 'seabird.modules.'):
+            for _, name, _ in iter_modules(modules.__path__, 'seabird.modules.'):  # noqa
                 plugin_modules.append(name)
 
         # These are modules which contain multiple plugins. All
@@ -105,8 +105,8 @@ class Bot(Protocol):
                 mod = import_module(module)
 
                 for name, obj in inspect.getmembers(mod):
-                    # This is a simple check to filter out any classes which aren't
-                    # from the current plugin module (such as imports)
+                    # This is a simple check to filter out any classes which
+                    # aren't from the current plugin module (such as imports)
                     if not inspect.isclass(obj) or obj.__module__ != module:
                         continue
 
@@ -147,8 +147,8 @@ class Bot(Protocol):
     # IRC helpers go here
 
     def from_channel(self, event):
-        # TODO: Figure out what to do about this. This will only really be valid
-        # for PRIVMSG messages and related other messages.
+        # TODO: Figure out what to do about this. This will only really be
+        # valid for PRIVMSG messages and related other messages.
         if len(event.args) < 1:
             return False
 
