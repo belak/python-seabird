@@ -15,11 +15,23 @@ class MathPlugin(Plugin):
     operators = {ast.Add: operator.add, ast.Sub: operator.sub,
                  ast.Mult: operator.mul, ast.Div: operator.truediv,
                  ast.Pow: operator.pow, ast.BitXor: operator.xor,
-                 ast.USub: operator.neg}
+                 ast.USub: operator.neg, ast.Mod: operator.mod}
 
     constants = {'PI': math.pi, 'E': math.e}
 
-    functions = {'pow': math.pow}
+    functions = {'pow': math.pow,
+                 'log': math.log,
+                 'sin': math.sin,
+                 'cos': math.cos,
+                 'tan': math.tan,
+                 'asin': math.asin,
+                 'acos': math.acos,
+                 'atan': math.atan,
+                 'deg': math.degrees,
+                 'rad': math.radians,
+                 'floor': math.floor,
+                 'ceil': math.ceil,
+                 'abs': math.fabs}
 
     @command
     def math(self, msg):
@@ -30,7 +42,7 @@ class MathPlugin(Plugin):
         try:
             val = self.eval(msg.trailing)
             self.bot.mention_reply(msg, "%s = %f" % (msg.trailing, val))
-        except (SyntaxError, MathError) as exc:
+        except (SyntaxError, MathError, TypeError) as exc:
             self.bot.mention_reply(msg, "Error: %s" % exc)
 
     def eval(self, expr):
@@ -44,32 +56,32 @@ class MathPlugin(Plugin):
             # <left> <operator> <right>
             oper = MathPlugin.operators.get(type(node.op))
             if oper is None:
-                raise Exception('Weird error')
+                raise MathError('Weird error')
 
             return oper(self._eval(node.left), self._eval(node.right))
         elif isinstance(node, ast.UnaryOp):
             # <operator> <operand> e.g., -1
             oper = MathPlugin.operators.get(type(node.op))
             if oper is None:
-                raise Exception('Weird error')
+                raise MathError('Weird error')
 
             return oper(self._eval(node.operand))
         elif isinstance(node, ast.Call):
             if not isinstance(node.func, ast.Name):
-                raise Exception('Invalid function name')
+                raise MathError('Invalid function name')
 
             args = [self._eval(arg) for arg in node.args]
 
             func = MathPlugin.functions.get(node.func.id)
             if func is None:
-                raise Exception('Function does not exist')
+                raise MathError('Function does not exist')
 
             return func(*args)
         elif isinstance(node, ast.Name):
             # <id>
             ret = MathPlugin.constants.get(node.id)
             if ret is None:
-                raise Exception('Invalid constant')
+                raise MathError('Invalid constant')
 
             return ret
         else:
