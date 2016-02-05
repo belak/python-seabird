@@ -1,5 +1,5 @@
 import ast
-import math  # pylint disable=unused-import
+import math  # pylint: disable=unused-import
 import operator
 
 from seabird.decorators import command
