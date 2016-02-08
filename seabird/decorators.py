@@ -15,9 +15,6 @@ class CommandMetadata:
         self.short_help = short_help
         self.full_help = full_help
 
-    def __repr__(self):
-        return '<CommandMetadata: %s>' % self.name
-
 
 def ensure_callback_metadata(callback):
     if getattr(callback, "_sb_meta", None) is None:

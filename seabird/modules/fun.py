@@ -18,7 +18,7 @@ class CoinPlugin(Plugin):
             names = ', '.join(CoinPlugin._coin_names)
             self.bot.mention_reply(msg,
                                    "That's not a valid coin side."
-                                   "Options are: %s" % names)
+                                   "Options are: {}".format(names))
             return
 
         choice = random.choice(CoinPlugin._coin_names)
@@ -46,26 +46,26 @@ class DicePlugin(Plugin):
                 # Not enough dice
                 self.bot.mention_reply(
                     msg,
-                    '%d is not a valid number of dice.' % dice_count)
+                    '{} is not a valid number of dice.'.format(dice_count))
                 return
 
             if dice_magnitude < 2:
                 self.bot.mention_reply(
                     msg,
-                    '%d us not a valid die size.' % dice_magnitude)
+                    '{} is not a valid die size.'.format(dice_magnitude))
                 return
 
             if dice_magnitude > 100:
                 self.bot.mention_reply(
                     msg,
-                    'Die of size %d is too large' % dice_magnitude)
+                    'Die of size {} is too large'.format(dice_magnitude))
                 return
 
             if total_count > 100:
                 self.bot.mention_reply(msg, 'Too many dice')
                 return
 
-            rolls = ['%dd%d:' % (dice_count, dice_magnitude)]
+            rolls = ['{}d{}:'.format(dice_count, dice_magnitude)]
             for _ in range(dice_count):
                 rolls.append(str(random.randint(1, dice_magnitude)))
 

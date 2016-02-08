@@ -119,7 +119,7 @@ class Protocol(asyncio.Protocol):
             line = line.rstrip('\r')
 
             # We got a line!
-            print('<< %s' % line)
+            print('<< {}'.format(line))
 
             msg = Message(line)
 
@@ -153,7 +153,7 @@ class Protocol(asyncio.Protocol):
         self.write_line(line)
 
     def write_line(self, line):
-        print('>> %s' % line)
+        print('>> {}'.format(line))
 
         # Add in the \r\n and send it
         line += '\r\n'

@@ -7,7 +7,7 @@ from seabird.plugin import Plugin
 
 
 METAR_URL = ('http://weather.noaa.gov/pub/data'
-             '/observations/metar/stations/%s.TXT')
+             '/observations/metar/stations/{}.TXT')
 
 
 class MetarPlugin(Plugin):
@@ -26,7 +26,7 @@ class MetarPlugin(Plugin):
             self.bot.mention_reply(msg, 'Not a valid airport code')
             return
 
-        async with aiohttp.get(METAR_URL % loc) as resp:
+        async with aiohttp.get(METAR_URL.format(loc)) as resp:
             if resp.status != 200:
                 self.bot.mention_reply(msg, 'Could not find data for station')
                 return
