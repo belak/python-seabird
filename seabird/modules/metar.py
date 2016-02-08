@@ -6,7 +6,8 @@ from seabird.decorators import command
 from seabird.plugin import Plugin
 
 
-METAR_URL = 'http://weather.noaa.gov/pub/data/observations/metar/stations/%s.TXT'
+METAR_URL = ('http://weather.noaa.gov/pub/data'
+             '/observations/metar/stations/%s.TXT')
 
 
 class MetarPlugin(Plugin):
