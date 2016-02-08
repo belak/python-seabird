@@ -76,8 +76,8 @@ class Bot(Protocol):
         plugin_class = getattr(module, name)
 
         if Plugin not in inspect.getmro(plugin_class):
-            raise TypeError('Class %s.%s is not a valid Plugin' %
-                            (module.__name__, name))
+            raise TypeError('Class {}.{} is not a valid Plugin'.format(
+                module.__name__, name))
 
         # Initialize the plugin
         plugin = plugin_class(self)
@@ -100,7 +100,7 @@ class Bot(Protocol):
         # plugins which are found in these modules will be loaded.
         if plugin_modules is not None:
             for module in plugin_modules:
-                print('Loading module %s' % module)
+                print('Loading module {}'.format(module))
 
                 mod = import_module(module)
 
@@ -117,7 +117,7 @@ class Bot(Protocol):
                     except TypeError:
                         continue
 
-                    print('Loaded plugin %s.%s' % (module, name))
+                    print('Loaded plugin {}.{}'.format(module, name))
 
         # These are all plugins which are explicitly loaded
         if plugin_classes is not None:
@@ -164,7 +164,7 @@ class Bot(Protocol):
         """Reply to and mention the user in the given event"""
         # If the event came from a channel, prepend the nick it came from
         if self.from_channel(event):
-            msg = '%s: %s' % (event.identity.name, msg)
+            msg = '{}: {}'.format(event.identity.name, msg)
 
         self.reply(event, msg)
 

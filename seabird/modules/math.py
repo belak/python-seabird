@@ -41,9 +41,9 @@ class MathPlugin(Plugin):
         """
         try:
             val = self.eval(msg.trailing)
-            self.bot.mention_reply(msg, "%s = %f" % (msg.trailing, val))
+            self.bot.mention_reply(msg, "{} = {}".format(msg.trailing, val))
         except (SyntaxError, MathError, TypeError) as exc:
-            self.bot.mention_reply(msg, "Error: %s" % exc)
+            self.bot.mention_reply(msg, "Error: {}".format(exc))
 
     def eval(self, expr):
         return self._eval(ast.parse(expr, mode='eval').body)

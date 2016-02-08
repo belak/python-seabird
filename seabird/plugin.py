@@ -22,8 +22,8 @@ class PluginMetadata:
 
             for command in func_meta.commands:
                 if command.name in self.commands:
-                    raise KeyError('Command %s already registered '
-                                   'for this plugin' % command.name)
+                    raise KeyError('Command {} already registered '
+                                   'for this plugin'.format(command.name))
 
                 self.commands[command.name] = CommandCallback(func_meta, func)
 
