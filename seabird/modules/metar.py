@@ -2,17 +2,15 @@ import asyncio
 
 import aiohttp
 
-from seabird.decorators import command
-from seabird.plugin import Plugin
+from seabird.plugin import Plugin, CommandMixin
 
 
 METAR_URL = ('http://weather.noaa.gov/pub/data'
              '/observations/metar/stations/{}.TXT')
 
 
-class MetarPlugin(Plugin):
-    @command
-    def metar(self, msg):
+class MetarPlugin(Plugin, CommandMixin):
+    def cmd_metar(self, msg):
         """<station>
 
         Returns the METAR report given an airport code

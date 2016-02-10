@@ -1,15 +1,13 @@
 import random
 import re
 
-from seabird.decorators import command, event
-from seabird.plugin import Plugin
+from seabird.plugin import Plugin, CommandMixin
 
 
 class CoinPlugin(Plugin):
     _coin_names = ['heads', 'tails']
 
-    @command
-    def coin(self, msg):
+    def cmd_coin(self, msg):
         """[heads|tails]
 
         Guess the coin flip. If you guess wrong, you're out!
@@ -32,8 +30,7 @@ class CoinPlugin(Plugin):
 class DicePlugin(Plugin):
     dice_re = re.compile(r'(?:^|\b)(\d*)d(\d+)\b')
 
-    @event('PRIVMSG')
-    def dice_callback(self, msg):
+    def irc_PRIVMSG(self, msg):
         total_count = 0
         all_rolls = []
         for match in DicePlugin.dice_re.finditer(msg.trailing):
@@ -75,15 +72,14 @@ class DicePlugin(Plugin):
             self.bot.mention_reply(msg, ', '.join(all_rolls))
 
 
-class RoulettePlugin(Plugin):
+class RoulettePlugin(Plugin, CommandMixin):
     def __init__(self, bot):
         super().__init__(bot)
 
         self._channel_counter = {}
         self._gun_size = self.bot.config.get('ROULETTE_GUN_SIZE', 6)
 
-    @command
-    def roulette(self, msg):
+    def cmd_roulette(self, msg):
         """Click... click... BANG!"""
         rounds_left = self._channel_counter.get(msg.args[0], -1)
         if rounds_left == -1:
@@ -101,8 +97,7 @@ class RoulettePlugin(Plugin):
 
 
 class MentionsPlugin(Plugin):
-    @event('PRIVMSG')
-    def mentions(self, msg):
+    def irc_PRIVMSG(self, msg):
         if not msg.trailing.startswith(self.bot.current_nick + ': '):
             return
 

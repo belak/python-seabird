@@ -2,15 +2,14 @@ import ast
 import math  # pylint: disable=unused-import
 import operator
 
-from seabird.decorators import command
-from seabird.plugin import Plugin
+from seabird.plugin import Plugin, CommandMixin
 
 
 class MathError(Exception):
     pass
 
 
-class MathPlugin(Plugin):
+class MathPlugin(Plugin, CommandMixin):
     # supported operators
     operators = {ast.Add: operator.add, ast.Sub: operator.sub,
                  ast.Mult: operator.mul, ast.Div: operator.truediv,
@@ -33,8 +32,7 @@ class MathPlugin(Plugin):
                  'ceil': math.ceil,
                  'abs': math.fabs}
 
-    @command
-    def math(self, msg):
+    def cmd_math(self, msg):
         """[expr]
 
         Run some simple calculations.
