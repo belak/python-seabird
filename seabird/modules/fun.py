@@ -4,7 +4,7 @@ import re
 from seabird.plugin import Plugin, CommandMixin
 
 
-class CoinPlugin(Plugin):
+class CoinPlugin(Plugin, CommandMixin):
     _coin_names = ['heads', 'tails']
 
     def cmd_coin(self, msg):
