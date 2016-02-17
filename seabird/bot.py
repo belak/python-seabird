@@ -6,7 +6,7 @@ import ssl
 from types import ModuleType
 
 from .plugin import Plugin
-from .irc import Protocol, Message
+from .irc import Protocol
 from . import modules
 
 
@@ -42,31 +42,9 @@ class Bot(Protocol):
             self.current_nick += '_'
             self.write('NICK', self.current_nick)
 
-        cmd = None
-        if (msg.event == "PRIVMSG" and
-                msg.trailing.startswith(self.config['PREFIX'])):
-            cmd = Message(msg.line)
-
-            # Remove the last arg so we can recreate it. Note that we
-            # skip the prefix.
-            split = cmd.trailing[len(self.config['PREFIX']):].split(' ', 1)
-            cmd.event = split[0]
-
-            # Replace trailing
-            cmd.trailing = ''
-            if len(split) > 1:
-                cmd.trailing = split[1]
-
-            # Replace the last arg
-            cmd.args.pop()
-            cmd.args.append(cmd.trailing)
-
+        # Dispatch all events
         for plugin in self.plugins:
-            plugin._sb_meta.dispatch_event(msg)
-
-            # Dispatch the command if we have it
-            if cmd is not None:
-                plugin._sb_meta.dispatch_command(cmd)
+            plugin.dispatch_event(msg)
 
     def _load_plugin(self, module, name):
         # NOTE: This can take either a module or a string

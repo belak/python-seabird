@@ -1,53 +1,55 @@
-from collections import namedtuple
+from .irc import Message
 
 
-# CommandCallback is a simple class which contains the command
-# metadata and the function relating to the command
-CommandCallback = namedtuple('CommandCallback', ['meta', 'func'])
-
-
-class PluginMetadata:
-    def __init__(self, plugin):
-        self.commands = {}
-        self.events = {}
-
-        for func_name in dir(plugin):
-            func = getattr(plugin, func_name)
-            if not hasattr(func, '_sb_meta'):
-                continue
-
-            # This is just because I don't want to keep referring to
-            # it as func._sb_meta
-            func_meta = func._sb_meta
-
-            for command in func_meta.commands:
-                if command.name in self.commands:
-                    raise KeyError('Command {} already registered '
-                                   'for this plugin'.format(command.name))
-
-                self.commands[command.name] = CommandCallback(func_meta, func)
-
-            for event in func_meta.events:
-                if event not in self.events:
-                    self.events[event] = []
-
-                self.events[event].append(func)
-
+class CommandMixin:
     def dispatch_event(self, event):
-        for func in self.events.get(event.event, []):
-            func(event)
+        super().dispatch_event(event)
+        if event.event != 'PRIVMSG':
+            return
+
+        if not event.trailing.startswith(self.bot.config['PREFIX']):
+            return
+
+        # Create a new message
+        cmd = Message(event.line)
+        split = cmd.trailing[len(self.bot.config['PREFIX']):].split(' ', 1)
+        cmd.event = split[0]
+
+        # Replace the last arg with everything after the command being called.
+        cmd.args.pop()
+        if len(split) > 1:
+            cmd.args.append(split[1])
+        else:
+            cmd.args.append('')
+
+        # Send it off!
+        self.dispatch_command(cmd)
 
     def dispatch_command(self, cmd):
-        if cmd.event in self.commands:
-            self.commands[cmd.event].func(cmd)
+        callback = getattr(self, "cmd_{}".format(cmd.event.lower()), None)
+        if not callback:
+            return
+
+        callback(cmd)
 
 
 class Plugin:
     """Simple wrapper class to avoid defining a few common things
 
-    In order for a class to be a plugin it must inherit from this
-    class. It defines one method: __init__
+    In order for a class to be a plugin it must inherit from this class. It
+    defines __init__ and dispatch_event.
     """
     def __init__(self, bot):
         self.bot = bot
-        self._sb_meta = PluginMetadata(self)
+
+    def dispatch_event(self, event):
+        """Attempt to dispatch an event
+
+        This works in a manner similar to the twisted.words irc module. If a
+        callback exists, we use it.
+        """
+        callback = getattr(self, "irc_{}".format(event.event.lower()), None)
+        if not callback:
+            return
+
+        callback(event)

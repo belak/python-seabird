@@ -82,7 +82,9 @@ class Message:
         if trailing is not None:
             self.args.append(trailing)
 
-        self.trailing = self.args[-1]
+    @property
+    def trailing(self):
+        return self.args[-1]
 
 
 class Protocol(asyncio.Protocol):
