@@ -149,13 +149,13 @@ class Bot(Protocol):
     def from_channel(self, event):
         # TODO: Figure out what to do about this. This will only really be
         # valid for PRIVMSG messages and related other messages.
-        if len(event.args) < 1:
+        if len(event.args) < 2:
             return False
 
         # If the location is the current nick, we know it's a private message.
         # This saves on mucking about with ISupport and other such nonsense and
         # lets us keep this as simple as possible.
-        if event.args[-1] == self.current_nick:
+        if event.args[0] == self.current_nick:
             return False
 
         return True
