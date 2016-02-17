@@ -48,7 +48,7 @@ class Plugin:
         This works in a manner similar to the twisted.words irc module. If a
         callback exists, we use it.
         """
-        callback = getattr(self, "irc_{}".format(event.event.upper()), None)
+        callback = getattr(self, "irc_{}".format(event.event.lower()), None)
         if not callback:
             return
 

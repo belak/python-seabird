@@ -30,7 +30,7 @@ class CoinPlugin(Plugin, CommandMixin):
 class DicePlugin(Plugin):
     dice_re = re.compile(r'(?:^|\b)(\d*)d(\d+)\b')
 
-    def irc_PRIVMSG(self, msg):
+    def irc_privmsg(self, msg):
         total_count = 0
         all_rolls = []
         for match in DicePlugin.dice_re.finditer(msg.trailing):
@@ -97,7 +97,7 @@ class RoulettePlugin(Plugin, CommandMixin):
 
 
 class MentionsPlugin(Plugin):
-    def irc_PRIVMSG(self, msg):
+    def irc_privmsg(self, msg):
         if not msg.trailing.startswith(self.bot.current_nick + ': '):
             return
 
