@@ -47,6 +47,8 @@ class URLPlugin(Plugin):
             if not data:
                 return
 
+            # lxml has an implementation of xpath, so we use that to search for
+            # the title tag.
             tree = lxml.html.fromstring(data)
             title = tree.find(".//title")
             if title is None:
