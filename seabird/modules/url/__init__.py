@@ -34,8 +34,8 @@ class URLPlugin(Plugin):
 
             matching_plugin = False
             for plugin in self.bot.plugins:
-                if (isinstance(plugin, URLMixin)
-                        and plugin.url_match(msg, parsed_url)):
+                if (isinstance(plugin, URLMixin) and
+                        plugin.url_match(msg, parsed_url)):
                     matching_plugin = True
 
             # As a fallback, use our own internal URL handler
