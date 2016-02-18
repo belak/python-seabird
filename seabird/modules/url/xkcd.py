@@ -8,16 +8,21 @@ from ...plugin import Plugin
 from . import URLMixin
 
 
-class XKCDUrlPlugin(Plugin, URLMixin):
-    url_regex = re.compile(r'https?://xkcd\.com(/\d+)?/?$')
+class XKCDURLPlugin(Plugin, URLMixin):
+    url_regex = re.compile(r'(/\d+)?/?$')
 
     def url_match(self, msg, url):
-        match = XKCDUrlPlugin.url_regex.match(url)
+        if url.netloc != 'xkcd.com':
+            return False
+
+        match = XKCDURLPlugin.url_regex.match(url.path)
         if match is None:
             return False
 
+        url = url._replace(path=url.path+'/info.0.json')
+
         loop = asyncio.get_event_loop()
-        loop.create_task(self.url_callback(msg, url+'/info.0.json'))
+        loop.create_task(self.url_callback(msg, url.geturl()))
 
         return True
 

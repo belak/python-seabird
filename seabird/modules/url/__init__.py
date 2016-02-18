@@ -1,5 +1,6 @@
 import asyncio
 import re
+from urllib.parse import urlparse
 
 import aiohttp
 import lxml.html
@@ -29,10 +30,12 @@ class URLPlugin(Plugin):
     def irc_privmsg(self, msg):
         for match in URLPlugin.url_regex.finditer(msg.trailing):
             url = match.group(0)
+            parsed_url = urlparse(url)
 
             matching_plugin = False
             for plugin in self.bot.plugins:
-                if isinstance(plugin, URLMixin) and plugin.url_match(msg, url):
+                if (isinstance(plugin, URLMixin)
+                        and plugin.url_match(msg, parsed_url)):
                     matching_plugin = True
 
             # As a fallback, use our own internal URL handler
