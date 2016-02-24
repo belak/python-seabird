@@ -4,7 +4,7 @@ from urllib.parse import parse_qs
 import aiohttp
 from isodate import parse_duration
 
-from ...plugin import Plugin
+from seabird.plugin import Plugin
 
 from . import URLPlugin, URLMixin
 

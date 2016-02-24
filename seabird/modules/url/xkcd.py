@@ -3,7 +3,7 @@ import re
 
 import aiohttp
 
-from ...plugin import Plugin
+from seabird.plugin import Plugin
 
 from . import URLPlugin, URLMixin
 
