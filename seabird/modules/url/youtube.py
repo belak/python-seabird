@@ -6,7 +6,7 @@ from isodate import parse_duration
 
 from ...plugin import Plugin
 
-from . import URLMixin
+from . import URLPlugin, URLMixin
 
 
 YOUTUBE_URL = ("https://www.googleapis.com/youtube/v3/videos?"
@@ -15,6 +15,11 @@ YOUTUBE_URL = ("https://www.googleapis.com/youtube/v3/videos?"
 
 
 class YoutubeURLPlugin(Plugin, URLMixin):
+    def __init__(self, bot):
+        super().__init__(bot)
+
+        self.bot.load_plugin(URLPlugin)
+
     def url_match(self, msg, url):
         video_id = None
         if url.netloc == 'youtube.com':

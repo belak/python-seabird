@@ -5,11 +5,16 @@ import aiohttp
 
 from ...plugin import Plugin
 
-from . import URLMixin
+from . import URLPlugin, URLMixin
 
 
 class XKCDURLPlugin(Plugin, URLMixin):
     url_regex = re.compile(r'(/\d+)?/?$')
+
+    def __init__(self, bot):
+        super().__init__(bot)
+
+        self.bot.load_plugin(URLPlugin)
 
     def url_match(self, msg, url):
         if url.netloc != 'xkcd.com':
