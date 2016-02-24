@@ -2,8 +2,7 @@ from .irc import Message
 
 
 class CommandMixin:
-    def dispatch_event(self, event):
-        super().dispatch_event(event)
+    def irc_privmsg(self, event):
         if event.event != 'PRIVMSG':
             return
 

@@ -15,7 +15,7 @@ class CoinPlugin(Plugin, CommandMixin):
         if msg.trailing not in CoinPlugin._coin_names:
             names = ', '.join(CoinPlugin._coin_names)
             self.bot.mention_reply(msg,
-                                   "That's not a valid coin side."
+                                   "That's not a valid coin side. "
                                    "Options are: {}".format(names))
             return
 
