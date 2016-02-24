@@ -4,7 +4,7 @@ USER = 'herbert'
 NAME = 'Herbert Bot'
 
 PLUGIN_CLASSES = [
-    ('seabird.modules.welcome', 'WelcomePlugin'),
+    'seabird.modules.welcome.WelcomePlugin',
 ]
 
 SSL = True
