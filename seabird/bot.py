@@ -1,7 +1,7 @@
 import asyncio
 from importlib import import_module
 import inspect
-from pkgutil import iter_modules
+from pkgutil import walk_packages
 import ssl
 
 from .plugin import Plugin
@@ -85,7 +85,7 @@ class Bot(Protocol):
         plugin_modules = self.config.get('PLUGIN_MODULES')
         if plugin_classes is None and plugin_modules is None:
             plugin_modules = []
-            for _, name, _ in iter_modules(modules.__path__, 'seabird.modules.'):  # noqa
+            for _, name, _ in walk_packages(modules.__path__, 'seabird.modules.'):  # noqa
                 plugin_modules.append(name)
 
         # These are modules which contain multiple plugins. All
