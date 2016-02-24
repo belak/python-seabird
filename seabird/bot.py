@@ -3,7 +3,6 @@ from importlib import import_module
 import inspect
 from pkgutil import iter_modules
 import ssl
-from types import ModuleType
 
 from .plugin import Plugin
 from .irc import Protocol
@@ -46,21 +45,36 @@ class Bot(Protocol):
         for plugin in self.plugins:
             plugin.dispatch_event(msg)
 
-    def _load_plugin(self, module, name):
-        # NOTE: This can take either a module or a string
-        if not isinstance(module, ModuleType):
-            module = import_module(module)
+    def load_plugin(self, obj):
+        """Load and return a given plugin
 
-        plugin_class = getattr(module, name)
+        This can take either a class or a string as the one argument.
+        """
+        if inspect.isclass(obj):
+            plugin_class = obj
+        else:
+            module, _, name = obj.rpartition('.')
+            module = import_module(module)
+            plugin_class = getattr(module, name)
 
         if Plugin not in inspect.getmro(plugin_class):
-            raise TypeError('Class {}.{} is not a valid Plugin'.format(
-                module.__name__, name))
+            raise TypeError('Class {} is not a valid Plugin'.format(obj))
+
+        # If it's already loaded, we should just return the already loaded
+        # instance.
+        for plugin in self.plugins:
+            if isinstance(plugin, plugin_class):
+                return plugin
 
         # Initialize the plugin
         plugin = plugin_class(self)
 
+        # Add the plugin to the list
         self.plugins.append(plugin)
+
+        print('Loaded plugin {}'.format(plugin_class))
+
+        return plugin
 
     def run(self):
         """Run the bot and wait for it to die"""
@@ -91,16 +105,14 @@ class Bot(Protocol):
                     # We attempt to load all classes, but ignore the
                     # failures
                     try:
-                        self._load_plugin(mod, name)
+                        self.load_plugin(obj)
                     except TypeError:
                         continue
 
-                    print('Loaded plugin {}.{}'.format(module, name))
-
         # These are all plugins which are explicitly loaded
         if plugin_classes is not None:
-            for module, name in self.config.get('PLUGIN_CLASSES', {}):
-                self._load_plugin(module, name)
+            for class_name in self.config.get('PLUGIN_CLASSES', {}):
+                self.load_plugin(class_name)
 
         # Create an SSL context if we asked for one
         ssl_ctx = None
