@@ -24,7 +24,7 @@ class KarmaPlugin(Plugin, CommandMixin):
 
     def cmd_karma(self, msg):
         normalized_item = msg.trailing.lower()
-        with self.base.db_session() as session:
+        with self.db.session() as session:
             score = Karma.score.default.arg
 
             k = session.query(Karma).get(normalized_item)
