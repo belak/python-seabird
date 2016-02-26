@@ -6,10 +6,11 @@ from sqlalchemy import Column, Float, String
 from seabird.plugin import Plugin, CommandMixin
 
 from .db import Base, DatabasePlugin
-from .utils import fetch_location, LocationException
+from .utils import fetch_location, LocationException, Location
 
 
 FORECAST_URL = "https://api.forecast.io/forecast/{}/{:.4f},{:.4f}"
+
 
 class WeatherLocation(Base):
     __tablename__ = 'weather_locations'
@@ -19,6 +20,7 @@ class WeatherLocation(Base):
     lat = Column(Float)
     lon = Column(Float)
 
+
 class WeatherPlugin(Plugin, CommandMixin):
     def __init__(self, bot):
         super().__init__(bot)
@@ -27,24 +29,52 @@ class WeatherPlugin(Plugin, CommandMixin):
 
         self.db = self.bot.load_plugin(DatabasePlugin)
 
+    async def fetch_location(self, msg):
+        search_loc = msg.trailing.strip()
+        loc = None
+        if not search_loc:
+            with self.db.session() as session:
+                db_loc = session.query(WeatherLocation).filter(WeatherLocation.nick == msg.identity.name).one_or_none()
+
+                if not db_loc:
+                    self.bot.mention_reply(msg, 'No stored location found.')
+                    return
+
+                loc = Location(db_loc.address, db_loc.lat, db_loc.lon)
+
+        if loc is None:
+            try:
+                loc = await fetch_location(search_loc)
+            except LocationException as e:
+                self.bot.mention_reply(msg, e)
+                return None
+
+        # Update the stored location for the given nick
+        with self.db.session() as session:
+            weather_loc, _ = session.get_or_create(WeatherLocation,
+                                                   nick=msg.identity.name)
+            weather_loc.address = loc.address
+            weather_loc.lat = loc.lat
+            weather_loc.lon = loc.lon
+            session.add(weather_loc)
+            session.flush()
+
+        return loc
+
     def cmd_forecast(self, msg):
-        loc = {}
-
         loop = asyncio.get_event_loop()
-        loop.create_task(self.forecast_callback(msg, loc))
+        loop.create_task(self.forecast_callback(msg))
 
-    async def forecast_callback(self, msg, loc):
-        pass
+    async def forecast_callback(self, msg):
+        loc = await fetch_location(msg)
 
     def cmd_weather(self, msg):
         loop = asyncio.get_event_loop()
         loop.create_task(self.weather_callback(msg))
 
     async def weather_callback(self, msg):
-        try:
-            loc = await fetch_location(msg.trailing)
-        except LocationException as e:
-            self.bot.mention_reply(msg, e)
+        loc = await self.fetch_location(msg)
+        if loc is None:
             return
 
         async with aiohttp.get(FORECAST_URL.format(self.key, loc.lat, loc.lon)) as resp:

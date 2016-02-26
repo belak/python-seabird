@@ -5,10 +5,13 @@ import aiohttp
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 
+
+Location = namedtuple('Location', ['address', 'lat', 'lon'])
+
+
 class LocationException(Exception):
     pass
 
-Location = namedtuple('Location', ['address', 'lat', 'lon'])
 
 async def fetch_location(address):
     async with aiohttp.get(GEOCODE_URL, params={
