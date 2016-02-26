@@ -34,11 +34,10 @@ class KarmaPlugin(Plugin, CommandMixin):
             self.bot.reply(msg, "%s's karma is %d" % (msg.trailing, score))
 
     def irc_privmsg(self, msg):
-        if self.regex.match(msg.trailing):
-            if not self.bot.from_channel(msg):
-                self.bot.reply(msg, 'Must be used in a channel')
-                return
+        if not self.bot.from_channel(msg):
+            return
 
+        if self.regex.match(msg.trailing):
             with self.db.session() as session:
                 for (item, operation) in self.regex.findall(msg.trailing):
                     normalized_item = item.lower()
