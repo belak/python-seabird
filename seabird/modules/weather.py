@@ -1,4 +1,5 @@
 import asyncio
+from datetime import date
 
 import aiohttp
 from sqlalchemy import Column, Float, String
@@ -37,17 +38,12 @@ class WeatherPlugin(Plugin, CommandMixin):
                 db_loc = session.query(WeatherLocation).filter(WeatherLocation.nick == msg.identity.name).one_or_none()
 
                 if not db_loc:
-                    self.bot.mention_reply(msg, 'No stored location found.')
-                    return
+                    raise LocationException('No stored location found.')
 
                 loc = Location(db_loc.address, db_loc.lat, db_loc.lon)
 
         if loc is None:
-            try:
-                loc = await fetch_location(search_loc)
-            except LocationException as e:
-                self.bot.mention_reply(msg, e)
-                return None
+            loc = await fetch_location(search_loc)
 
         # Update the stored location for the given nick
         with self.db.session() as session:
@@ -66,15 +62,44 @@ class WeatherPlugin(Plugin, CommandMixin):
         loop.create_task(self.forecast_callback(msg))
 
     async def forecast_callback(self, msg):
-        loc = await fetch_location(msg)
+        try:
+            loc = await self.fetch_location(msg)
+        except LocationException as e:
+            self.bot.mention_reply(msg, e)
+            return
+
+        async with aiohttp.get(FORECAST_URL.format(self.key, loc.lat, loc.lon)) as resp:
+            if resp.status != 200:
+                self.bot.mention_reply(msg, 'Could not get weather data.')
+                return
+
+            data = await resp.json()
+
+            self.bot.mention_reply(msg, '3 day forecast for {}.'.format(loc.address))
+            for day in data['daily']['data'][:3]:
+                weekday = date.fromtimestamp(day['time']).strftime('%A')
+                print(day)
+
+                self.bot.mention_reply(
+                    msg,
+                    "{}: High {:.2f}, Low {:.2f}, Humidity {:.0f}. {}".format(
+                        weekday,
+                        day['temperatureMax'],
+                        day['temperatureMin'],
+                        day['humidity']*100,
+                        day['summary'],
+                    ),
+                )
 
     def cmd_weather(self, msg):
         loop = asyncio.get_event_loop()
         loop.create_task(self.weather_callback(msg))
 
     async def weather_callback(self, msg):
-        loc = await self.fetch_location(msg)
-        if loc is None:
+        try:
+            loc = await self.fetch_location(msg)
+        except LocationException as e:
+            self.bot.mention_reply(msg, e)
             return
 
         async with aiohttp.get(FORECAST_URL.format(self.key, loc.lat, loc.lon)) as resp:
