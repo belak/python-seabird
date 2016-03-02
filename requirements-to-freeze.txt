@@ -1,0 +1,10 @@
+# HTTP client
+aiohttp
+
+# General filling in stdlib gaps
+isodate
+lxml
+
+# ORM and migrations tool
+SQLAlchemy
+alembic
