@@ -1,24 +1,50 @@
-# seaprince
+# seabird
 
-[![Build Status](https://travis-ci.org/belak/pyseabird.svg?branch=master)](https://travis-ci.org/belak/pyseabird)
-
-AKA The Bot Formerly Known As Seabird
+AKA the bot formerly known as the bot formerly known as seabird
 
 ## Goals
 
 * Simple framework
-* Performant (when it needs to be)
 * Clean code
 * Only stdlib in core (irc portion)
 
-## Event types
+## Setup
 
-* Command
-* Message
-* Raw event
-* Scheduled events
-  * Periodic events
-  * At a specific time
+Required dependencies for core:
+
+* python3.5 or greater
+
+Install python plugin dependencies:
+
+* pip install -r requirements.txt
+
+The default distribution of seabird needs to be configured before it will do
+anything. It will import the config module. The simplest option is to copy the
+sample file provided at [config.dist.py](config.dist.py) to config.py, though
+the important settings are outlined below:
+
+| Setting        | Required | Description                                             |
+|----------------+----------+---------------------------------------------------------|
+| NICK           | Yes      | IRC nickname                                            |
+| PASS           |          | IRC password                                            |
+| USER           | Yes      | IRC username                                            |
+| NAME           | Yes      | IRC full name                                           |
+| HOST           | Yes      | Hostname of the IRC server to connect to                |
+| PORT           | Yes      | Port of the IRC server to connect to                    |
+| CMDS           |          | List of commands to run after a welcome msg is received |
+| PLUGIN_CLASSES |          | List of plugin classes to load                          |
+| PLUGIN_MODULES |          | List of plugin modules to load                          |
+| SSL            |          | True if the server needs SSL, False otherwise           |
+| SSL_VERIFY     |          | True if the server has a valid cert, False otherwise    |
+
+Settings for plugins:
+
+| Setting      | Required             | Description                                 |
+|--------------+----------------------+---------------------------------------------|
+| PREFIX       | For commands to work | Prefix to look for in messages for commands |
+| FORECAST_KEY | Weather              | API key for forecast.io                     |
+
+seabird can be run with the command `python -m seabird`
 
 ## asyncio
 
@@ -28,51 +54,12 @@ fall back to the main event loop. This allows IRC messages to be processed in
 the order they come in, but still makes it possible to move time consuming
 operations into the background.
 
-## API
+As an example:
 
-### Decorators
+``` python
+async def callback(msg):
+    print('do a thing')
 
-Event registration
-
-* command
-* event
-* interval (not implemented yet)
-* mention (not implemented yet)
-
-Limitations (not implemented yet)
-
-* rate
-* require\_chanmsg
-* require\_privmsg
-
-Modifications
-
-* threaded
-
-### Sample Plugin
-
-```python
-from seabird.plugin import Plugin
-
-class Roulette(Plugin):
-    def __init__(self, bot):
-        super().__init__(bot)
-
-        self._channel_counter = {}
-        self._gun_size = bot.config.get('ROULETTE_GUN_SIZE', 6)
-
-    @command
-    def roulette(self, event):
-        rounds_left = self._channel_counter.get(event.args[0], -1)
-        if rounds_left == -1:
-            bot.reply(event, "Reloading the gun.")
-            rounds_left = random.randint(1, 6)
-
-        rounds_left -= 1
-        if rounds_left <= 0:
-            self.bot.reply(event, "Bang!")
-        else:
-            self.bot.reply(event, "Click!")
-
-        self._channel_counter[event.channel] = rounds_left
+loop = asyncio.get_event_loop()
+loop.create_task(callback(msg))
 ```
