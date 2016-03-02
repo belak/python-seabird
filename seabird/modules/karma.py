@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String
 
 from seabird.plugin import Plugin, CommandMixin
 
-from .db import Base, DatabasePlugin
+from .db import Base, DatabaseMixin
 
 
 class Karma(Base):
@@ -14,13 +14,8 @@ class Karma(Base):
     score = Column(Integer, default=0)
 
 
-class KarmaPlugin(Plugin, CommandMixin):
+class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
     regex = re.compile(r'([^\s]+)(\+\+|--)(?:\s|$)')
-
-    def __init__(self, bot):
-        super().__init__(bot)
-
-        self.db = self.bot.load_plugin(DatabasePlugin)
 
     def cmd_karma(self, msg):
         normalized_item = msg.trailing.lower()
@@ -57,4 +52,3 @@ class KarmaPlugin(Plugin, CommandMixin):
                     k = session.query(Karma).get(normalized_item)
                     self.bot.reply(msg,
                                    "%s's karma is now %d" % (item, k.score))
-

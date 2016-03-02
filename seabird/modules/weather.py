@@ -6,7 +6,7 @@ from sqlalchemy import Column, Float, String
 
 from seabird.plugin import Plugin, CommandMixin
 
-from .db import Base, DatabasePlugin
+from .db import Base, DatabaseMixin
 from .utils import fetch_location, LocationException, Location
 
 
@@ -22,20 +22,19 @@ class WeatherLocation(Base):
     lon = Column(Float)
 
 
-class WeatherPlugin(Plugin, CommandMixin):
+class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
     def __init__(self, bot):
         super().__init__(bot)
 
         self.key = bot.config['FORECAST_KEY']
-
-        self.db = self.bot.load_plugin(DatabasePlugin)
 
     async def fetch_location(self, msg):
         search_loc = msg.trailing.strip()
         loc = None
         if not search_loc:
             with self.db.session() as session:
-                db_loc = session.query(WeatherLocation).filter(WeatherLocation.nick == msg.identity.name).one_or_none()
+                db_loc = session.query(WeatherLocation).filter(
+                    WeatherLocation.nick == msg.identity.name).one_or_none()
 
                 if not db_loc:
                     raise LocationException('No stored location found.')
@@ -64,8 +63,8 @@ class WeatherPlugin(Plugin, CommandMixin):
     async def forecast_callback(self, msg):
         try:
             loc = await self.fetch_location(msg)
-        except LocationException as e:
-            self.bot.mention_reply(msg, e)
+        except LocationException as exc:
+            self.bot.mention_reply(msg, exc)
             return
 
         async with aiohttp.get(FORECAST_URL.format(self.key, loc.lat, loc.lon)) as resp:
@@ -98,8 +97,8 @@ class WeatherPlugin(Plugin, CommandMixin):
     async def weather_callback(self, msg):
         try:
             loc = await self.fetch_location(msg)
-        except LocationException as e:
-            self.bot.mention_reply(msg, e)
+        except LocationException as exc:
+            self.bot.mention_reply(msg, exc)
             return
 
         async with aiohttp.get(FORECAST_URL.format(self.key, loc.lat, loc.lon)) as resp:

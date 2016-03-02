@@ -59,3 +59,8 @@ class DatabasePlugin(Plugin):
             raise
         finally:
             session.close()
+
+
+class DatabaseMixin:
+    def __init__(self, bot):
+        self.db = bot.load_plugin(DatabasePlugin)  # pylint: disable=invalid-name
