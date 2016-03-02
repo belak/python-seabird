@@ -67,14 +67,16 @@ class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
             self.bot.mention_reply(msg, exc)
             return
 
-        async with aiohttp.get(FORECAST_URL.format(self.key, loc.lat, loc.lon)) as resp:
+        url = FORECAST_URL.format(self.key, loc.lat, loc.lon)
+        async with aiohttp.get(url) as resp:
             if resp.status != 200:
                 self.bot.mention_reply(msg, 'Could not get weather data.')
                 return
 
             data = await resp.json()
 
-            self.bot.mention_reply(msg, '3 day forecast for {}.'.format(loc.address))
+            self.bot.mention_reply(
+                msg, '3 day forecast for {}.'.format(loc.address))
             for day in data['daily']['data'][:3]:
                 weekday = date.fromtimestamp(day['time']).strftime('%A')
                 print(day)
@@ -101,7 +103,8 @@ class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
             self.bot.mention_reply(msg, exc)
             return
 
-        async with aiohttp.get(FORECAST_URL.format(self.key, loc.lat, loc.lon)) as resp:
+        url = FORECAST_URL.format(self.key, loc.lat, loc.lon)
+        async with aiohttp.get(url) as resp:
             if resp.status != 200:
                 self.bot.mention_reply(msg, 'Could not get weather data.')
                 return
