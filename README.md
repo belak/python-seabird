@@ -39,10 +39,11 @@ the important settings are outlined below:
 
 Settings for plugins:
 
-| Setting      | Required             | Description                                 |
+| Setting      | Required for plugin  | Description                                 |
 |--------------+----------------------+---------------------------------------------|
 | PREFIX       | For commands to work | Prefix to look for in messages for commands |
 | FORECAST_KEY | Weather              | API key for forecast.io                     |
+| DB_URI       | DB, karma, weather   | SQLAlchemy Database URI                     |
 
 seabird can be run with the command `python -m seabird`
 
