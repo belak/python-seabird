@@ -25,6 +25,8 @@ anything. It will import the config module. The simplest option is to copy the
 sample file provided at [config.dist.py](config.dist.py) to config.py, though
 the important settings are outlined below:
 
+### Basic settings
+
 | Setting        | Required | Description                                             |
 |----------------+----------+---------------------------------------------------------|
 | NICK           | Yes      | IRC nickname                                            |
@@ -39,13 +41,15 @@ the important settings are outlined below:
 | SSL            |          | True if the server needs SSL, False otherwise           |
 | SSL_VERIFY     |          | True if the server has a valid cert, False otherwise    |
 
-Settings for plugins:
+### Plugin settings
 
 | Setting      | Required for plugin  | Description                                 |
 |--------------+----------------------+---------------------------------------------|
 | PREFIX       | For commands to work | Prefix to look for in messages for commands |
 | FORECAST_KEY | Weather              | API key for forecast.io                     |
 | DB_URI       | DB, karma, weather   | SQLAlchemy Database URI                     |
+
+### Running seabird
 
 seabird can be run with the command `python -m seabird`
 
