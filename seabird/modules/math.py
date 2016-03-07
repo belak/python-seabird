@@ -1,5 +1,5 @@
 import ast
-import math  # pylint: disable=unused-import
+import math
 import operator
 
 from seabird.plugin import Plugin, CommandMixin
