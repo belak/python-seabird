@@ -1,6 +1,6 @@
 # seabird
 
-[![Build Status](https://drone.coded.io/api/badges/belak/seabird/status.svg)](https://drone.coded.io/belak/seabird)
+[![Build Status](https://drone.coded.io/api/badges/seabird/pyseabird/status.svg)](https://drone.coded.io/belak/seabird)
 
 AKA the bot formerly known as the bot formerly known as seabird
 
