@@ -118,7 +118,7 @@ class Bot(Protocol):
         ssl_ctx = None
         if self.config['SSL']:
             ssl_ctx = ssl.create_default_context()
-            if not self.config['SSL_VERIFY']:
+            if not self.config.get('SSL_VERIFY', True):
                 ssl_ctx.check_hostname = False
                 ssl_ctx.verify_mode = ssl.CERT_NONE
 

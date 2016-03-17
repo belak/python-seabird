@@ -9,9 +9,10 @@ def main():
 
     conf = Config()
     conf.from_module('config')
-
-    bot = Bot(conf, loop=loop)
-    bot.run()
+    for network in conf.networks:
+        print(network)
+        bot = Bot(network, loop=loop)
+        bot.run()
 
     loop.run_forever()
     loop.close()
