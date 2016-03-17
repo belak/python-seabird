@@ -36,6 +36,7 @@ class DatabasePlugin(Plugin):
 
         self.engine = create_engine(self.bot.config.get('DB_URI',
                                                         'sqlite:///bot.db'))
+        self.engine.connect()
 
         # We need to use our own session class so we can add methods onto
         # it. In particular, get_or_create is very useful.
