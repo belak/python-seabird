@@ -37,9 +37,16 @@ class Plugin:
 
     In order for a class to be a plugin it must inherit from this class. It
     defines __init__ and dispatch_event.
+
+    This class needs to call super with no arguments so it can properly
+    instantiate 'object'. Because of this, any mixins which need to rely on
+    having a reference to the bot object need to either use self.bot or be
+    before Plugin in the MRO.
     """
     def __init__(self, bot):
         self.bot = bot
+
+        super().__init__()
 
     def dispatch_event(self, event):
         """Attempt to dispatch an event

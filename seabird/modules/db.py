@@ -63,5 +63,7 @@ class DatabasePlugin(Plugin):
 
 
 class DatabaseMixin:
-    def __init__(self, bot):
-        self.db = bot.load_plugin(DatabasePlugin)  # noqa # pylint: disable=invalid-name
+    def __init__(self):
+        super().__init__()
+
+        self.db = self.bot.load_plugin(DatabasePlugin)  # noqa # pylint: disable=invalid-name
