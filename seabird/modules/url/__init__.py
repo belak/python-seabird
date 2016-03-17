@@ -54,7 +54,7 @@ class URLPlugin(Plugin):
             # the title tag.
             tree = lxml.html.fromstring(data)
             title = tree.find(".//title")
-            if title is None:
+            if title is None or title.text is None:
                 return
 
             self.bot.reply(msg, 'Title: {}'.format(title.text))
