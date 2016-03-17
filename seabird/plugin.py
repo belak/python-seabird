@@ -41,8 +41,6 @@ class Plugin:
     def __init__(self, bot):
         self.bot = bot
 
-        super().__init__(bot)
-
     def dispatch_event(self, event):
         """Attempt to dispatch an event
 
