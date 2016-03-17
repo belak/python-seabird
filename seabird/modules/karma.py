@@ -29,6 +29,9 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
             self.bot.reply(msg, "%s's karma is %d" % (msg.trailing, score))
 
     def irc_privmsg(self, msg):
+        # We need to call super here so cmd_karma can be called
+        super().irc_privmsg(msg)
+
         if not self.bot.from_channel(msg):
             return
 
