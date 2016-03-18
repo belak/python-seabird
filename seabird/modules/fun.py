@@ -89,7 +89,7 @@ class RoulettePlugin(Plugin, CommandMixin):
         rounds_left -= 1
         if rounds_left <= 0:
             self.bot.reply(msg, "Bang!")
-            self.bot.write('KICK', msg.args[0], msg.prefix.name)
+            self.bot.write('KICK', msg.args[0], msg.identity.name)
         else:
             self.bot.reply(msg, "Click!")
 
