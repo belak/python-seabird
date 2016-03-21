@@ -82,7 +82,7 @@ class RoulettePlugin(Plugin, CommandMixin):
     def cmd_roulette(self, msg):
         """Click... click... BANG!"""
         rounds_left = self._channel_counter.get(msg.args[0], -1)
-        if rounds_left < 0:
+        if rounds_left <= 0:
             self.bot.reply(msg, "Reloading the gun.")
             rounds_left = random.randint(1, self._gun_size)
 
