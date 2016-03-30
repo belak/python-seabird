@@ -10,8 +10,7 @@ import logging
 
 from seabird.plugin import Plugin
 
-
-log = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class ISupportPlugin(Plugin):
@@ -45,7 +44,7 @@ class ISupportPlugin(Plugin):
 
             # eg, EXCEPTS
             if not value:
-                log.info('ISUPPORT [k]: %s', key)
+                LOG.info('ISUPPORT [k]: %s', key)
                 supported[key] = True
                 continue
 
@@ -80,6 +79,6 @@ class ISupportPlugin(Plugin):
             else:
                 supported[key] = True
 
-            log.info('ISUPPORT [k:v] %s:%s', key, supported[key])
+            LOG.info('ISUPPORT [k:v] %s:%s', key, supported[key])
 
         self.supported.update(supported)

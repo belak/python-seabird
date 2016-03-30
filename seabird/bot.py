@@ -9,7 +9,7 @@ from .plugin import Plugin
 from .irc import Protocol
 from . import modules
 
-log = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Bot(Protocol):
@@ -75,7 +75,7 @@ class Bot(Protocol):
         # Add the plugin to the list
         self.plugins.append(plugin)
 
-        log.info('Loaded plugin %s', plugin_class)
+        LOG.info('Loaded plugin %s', plugin_class)
 
         return plugin
 
@@ -95,7 +95,7 @@ class Bot(Protocol):
         # plugins which are found in these modules will be loaded.
         if plugin_modules is not None:
             for module in plugin_modules:
-                log.info('Loaded module %s', module)
+                LOG.info('Loaded module %s', module)
 
                 mod = import_module(module)
 
