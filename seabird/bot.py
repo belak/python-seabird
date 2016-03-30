@@ -1,12 +1,15 @@
 import asyncio
 from importlib import import_module
 import inspect
+import logging
 from pkgutil import walk_packages
 import ssl
 
 from .plugin import Plugin
 from .irc import Protocol
 from . import modules
+
+log = logging.getLogger(__name__)
 
 
 class Bot(Protocol):
@@ -72,7 +75,7 @@ class Bot(Protocol):
         # Add the plugin to the list
         self.plugins.append(plugin)
 
-        print('Loaded plugin {}'.format(plugin_class))
+        log.info('Loaded plugin %s', plugin_class)
 
         return plugin
 
@@ -92,7 +95,7 @@ class Bot(Protocol):
         # plugins which are found in these modules will be loaded.
         if plugin_modules is not None:
             for module in plugin_modules:
-                print('Loading module {}'.format(module))
+                log.info('Loaded module %s', module)
 
                 mod = import_module(module)
 

@@ -8,3 +8,6 @@ lxml
 # ORM and migrations tool
 SQLAlchemy
 alembic
+
+# Colors in logging
+colorlog

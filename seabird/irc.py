@@ -1,4 +1,8 @@
 import asyncio
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 def _decode_tag(data):
@@ -121,7 +125,7 @@ class Protocol(asyncio.Protocol):
             line = line.rstrip('\r')
 
             # We got a line!
-            print('<< {}'.format(line))
+            log.debug('IN  %s', line)
 
             msg = Message(line)
 
@@ -155,7 +159,7 @@ class Protocol(asyncio.Protocol):
         self.write_line(line)
 
     def write_line(self, line):
-        print('>> {}'.format(line))
+        log.debug('OUT %s', line)
 
         # Add in the \r\n and send it
         line += '\r\n'
