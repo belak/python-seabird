@@ -1,35 +1,21 @@
 from asyncio import get_event_loop
-from logging.config import dictConfig
+import logging
 
-# Configure logging. Note that this needs to come *before* any imports that use
-# the logging package because it's annoying.
-LOGGING = {
-    'version': 1,
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stderr',
-            'formatter': 'colored',
-        },
-    },
-    'formatters': {
-        'colored': {
-            '()': 'colorlog.ColoredFormatter',
-            'format': "%(log_color)s%(levelname)-8s%(reset)s %(message)s",
-        },
-    },
-}
-dictConfig(LOGGING)
+from colorlog import ColoredFormatter
 
 from .config import Config
 from .bot import Bot
 
 
 def main():
+    # Configure logging
+    root_logger = logging.getLogger()
+    root_handler = logging.StreamHandler()
+    root_handler.setFormatter(
+        ColoredFormatter("%(log_color)s%(levelname)-8s%(reset)s %(message)s"))
+    root_logger.addHandler(root_handler)
+    root_logger.setLevel(logging.DEBUG)
+
     loop = get_event_loop()
 
     conf = Config()
