@@ -124,7 +124,7 @@ class Protocol(asyncio.Protocol):
             line = line.rstrip('\r')
 
             # We got a line!
-            LOG.debug('IN  %s', line)
+            LOG.debug('<-- %s', line)
 
             msg = Message(line)
 
@@ -158,7 +158,7 @@ class Protocol(asyncio.Protocol):
         self.write_line(line)
 
     def write_line(self, line):
-        LOG.debug('OUT %s', line)
+        LOG.debug('--> %s', line)
 
         # Add in the \r\n and send it
         line += '\r\n'
