@@ -20,6 +20,7 @@ def _decode_tag(data):
 
 
 class Identity:
+    # name!user@host
     def __init__(self, raw):
         self.raw = raw
         self.user = None
@@ -97,6 +98,11 @@ class Protocol(asyncio.Protocol):
         self.name = name
         self.password = password
 
+        self.current_nick = nick
+        self.caps_requested = set()
+        self.caps_available = set()
+        self.handshake_done = False
+
         # These are actually initialized in connection_made, but we put it here
         # so pylint won't complain.
         self.transport = None
@@ -105,12 +111,23 @@ class Protocol(asyncio.Protocol):
     def connection_made(self, transport):
         self.transport = transport
         self.buf = ''
+        self.handshake_done = False
 
         if self.password is not None:
             self.write('PASS', self.password)
 
+        if len(self.caps_requested) != 0:
+            # We request all caps separately to keep things simple.
+            for cap in self.caps_requested:
+                self.write('CAP', 'REQ', cap)
+        else:
+            self.handshake()
+
+    def handshake(self):
+        self.write('CAP', 'END')
         self.write('NICK', self.nick)
         self.write('USER', self.user, '0.0.0.0', '0.0.0.0', self.name)
+        self.handshake_done = True
 
     def data_received(self, data):
         self.buf += data.decode()
@@ -128,13 +145,38 @@ class Protocol(asyncio.Protocol):
 
             msg = Message(line)
 
-            # The only thing important enough to be in the protocol
-            # itself is sending of pongs.
-            if msg.event == "PING":
+            # There are very few things actually important enough to be
+            # here. CAP handling, PING/PONG, and current_nick are among those.
+            if msg.event == '001':
+                self.current_nick = msg.args[0]
+            elif (msg.event == 'NICK' and
+                  msg.identity.name == self.current_nick):
+                self.current_nick = msg.args[0]
+            elif msg.event == "437" or msg.event == "433":
+                self.current_nick += '_'
+                self.write('NICK', self.current_nick)
+            elif msg.event == 'CAP':
+                if msg.args[1] == 'ACK':
+                    for cap in msg.args[2:]:
+                        self.caps_available.add(cap)
+
+                    enough_caps = len(self.caps_available) <= len(self.caps_requested)
+                    if not self.handshake_done and enough_caps:
+                        self.handshake()
+                elif msg.args[0] == 'NAK':
+                    raise RuntimeError('CAP(s)) {} not supported by server'.format(msg.args[1:]))
+            elif msg.event == "PING":
                 self.write("PONG", *msg.args)
 
             # Send the message to whoever's using this
             self.dispatch(msg)
+
+    def cap_req(self, cap):
+        if self.handshake_done:
+            # TODO: This should still make the request
+            raise RuntimeError('CAP requested after handshake')
+
+        self.caps_requested.add(cap)
 
     def write(self, *args):
         # If the final argument contains a space, it needs to be encoded as a

@@ -30,19 +30,10 @@ class Bot(Protocol):
 
         self.loop = loop
 
-        self.current_nick = self.config['NICK']
-
     def dispatch(self, msg):
-        # Update the current nick
         if msg.event == '001':
-            self.current_nick = msg.args[0]
             for line in self.config.get('CMDS', []):
                 self.write_line(line)
-        elif msg.event == 'NICK' and msg.identity.name == self.current_nick:
-            self.current_nick = msg.args[0]
-        elif msg.event == "437" or msg.event == "433":
-            self.current_nick += '_'
-            self.write('NICK', self.current_nick)
 
         # Dispatch all events
         for plugin in self.plugins:
