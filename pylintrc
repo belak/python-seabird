@@ -8,5 +8,11 @@ disable=missing-docstring,
         suppressed-message,
         locally-disabled
 
+[BASIC]
+good-names=i,j,k,v,ex,Run,_
+
+[DESIGN]
+max-attributes=12
+
 [SIMILARITIES]
 ignore-imports=yes

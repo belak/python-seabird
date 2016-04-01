@@ -1,12 +1,15 @@
 import asyncio
 from importlib import import_module
 import inspect
+import logging
 from pkgutil import walk_packages
 import ssl
 
 from .plugin import Plugin
 from .irc import Protocol
 from . import modules
+
+LOG = logging.getLogger(__name__)
 
 
 class Bot(Protocol):
@@ -27,19 +30,10 @@ class Bot(Protocol):
 
         self.loop = loop
 
-        self.current_nick = self.config['NICK']
-
     def dispatch(self, msg):
-        # Update the current nick
         if msg.event == '001':
-            self.current_nick = msg.args[0]
             for line in self.config.get('CMDS', []):
                 self.write_line(line)
-        elif msg.event == 'NICK' and msg.identity.name == self.current_nick:
-            self.current_nick = msg.args[0]
-        elif msg.event == "437" or msg.event == "433":
-            self.current_nick += '_'
-            self.write('NICK', self.current_nick)
 
         # Dispatch all events
         for plugin in self.plugins:
@@ -72,7 +66,7 @@ class Bot(Protocol):
         # Add the plugin to the list
         self.plugins.append(plugin)
 
-        print('Loaded plugin {}'.format(plugin_class))
+        LOG.info('Loaded plugin %s', plugin_class)
 
         return plugin
 
@@ -92,7 +86,7 @@ class Bot(Protocol):
         # plugins which are found in these modules will be loaded.
         if plugin_modules is not None:
             for module in plugin_modules:
-                print('Loading module {}'.format(module))
+                LOG.info('Loaded module %s', module)
 
                 mod = import_module(module)
 

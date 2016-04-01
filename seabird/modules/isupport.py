@@ -6,8 +6,44 @@
 # in seabird under the seabird license terms available in the root of the repo.
 
 from copy import deepcopy
+from collections import namedtuple
+import logging
+import re
 
 from seabird.plugin import Plugin
+
+LOG = logging.getLogger(__name__)
+PREFIX_REGEX = re.compile(r"\(([A-Za-z0-9]+)\)(.+)")
+
+ParsedPrefix = namedtuple("ParsedPrefix", "mode_to_prefix prefix_to_mode")
+
+
+def prefix_parse(prefix):
+    match = PREFIX_REGEX.match(prefix)
+    if not match:
+        raise ValueError("Prefix does not match expected format")
+
+    modes, values = match.groups()
+    if len(modes) != len(values):
+        raise ValueError("Unbalanced modes and prefixes")
+
+    ret = ParsedPrefix({}, {})
+    for k, v in zip(modes, values):
+        ret.mode_to_prefix[k] = v
+        ret.prefix_to_mode[v] = k
+
+    return ret
+
+
+def status_prefix_parse(prefix, string):
+    prefix = prefix.prefix_to_mode
+
+    modes = set()
+    while string[0] in prefix:
+        prefix_char, string = string[0], string[1:]
+        modes.add(prefix[prefix_char])
+
+    return (modes, string)
 
 
 class ISupportPlugin(Plugin):
@@ -41,7 +77,7 @@ class ISupportPlugin(Plugin):
 
             # eg, EXCEPTS
             if not value:
-                print('ISUPPORT [k]: {}'.format(key))
+                LOG.info('ISUPPORT [k]: %s', key)
                 supported[key] = True
                 continue
 
@@ -64,7 +100,8 @@ class ISupportPlugin(Plugin):
                 ret_list = ret_list[0]
 
             # TODO: This *might* be possible but it should be extremely
-            # rare... and there isn't really a proper way to handle it.
+            # rare... and there isn't really a proper way to handle it so we
+            # just ignore it.
             if ret_list and ret_dict:
                 raise ValueError('ISupport with both list and dict value')
 
@@ -76,6 +113,6 @@ class ISupportPlugin(Plugin):
             else:
                 supported[key] = True
 
-            print('ISUPPORT [k:v] {}:{}'.format(key, supported[key]))
+            LOG.info('ISUPPORT [k:v] %s:%s', key, supported[key])
 
         self.supported.update(supported)
