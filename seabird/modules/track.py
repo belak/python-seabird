@@ -50,12 +50,6 @@ class UserTrack(Plugin):
 
         del self.users[nick]
 
-    def irc_privmsg(self, msg):
-        if self.bot.from_channel(msg):
-            return
-
-        self.bot.write('JOIN', msg.trailing)
-
     # Now that the public interface is out of the way, we need to actually get
     # the tracking done.
     def irc_001(self, msg):
@@ -78,6 +72,10 @@ class UserTrack(Plugin):
 
             user.channels[channel] = modes
             LOG.info('Modes for %s in %s are %s', nick, channel, modes)
+
+    def irc_join(self, msg):
+        user = self.add_user(msg.identity.name)
+        user.channels[msg.params[0]] = set()
 
     def irc_nick(self, msg):
         oldnick = msg.identity.name
