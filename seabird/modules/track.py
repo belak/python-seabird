@@ -131,6 +131,8 @@ class UserTrack(Plugin):
     irc_kick = irc_part
 
     def irc_mode(self, msg):
+        prefix = prefix_parse(self.isupport.supported.get('PREFIX'))
+        modegroups = self.isupport.supported.get('CHANMODES')
         pass
 
     def irc_quit(self, msg):
