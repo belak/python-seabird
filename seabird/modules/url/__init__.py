@@ -57,4 +57,13 @@ class URLPlugin(Plugin):
             if title is None or title.text is None:
                 return
 
-            self.bot.reply(msg, 'Title: {}'.format(title.text))
+            text = title.text.translate({
+                '\t': None,
+                '\n': None,
+                '\v': None,
+            }).strip()
+
+            if not text:
+                return
+
+            self.bot.reply(msg, 'Title: {}'.format(text))
