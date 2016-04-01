@@ -2,7 +2,7 @@ import logging
 
 from seabird.plugin import Plugin
 
-from .isupport import ISupportPlugin, prefix_parse, status_prefix_parse
+from .isupport import ISupportPlugin, prefix_parse, status_prefix_parse, mode_parse
 
 LOG = logging.getLogger(__name__)
 
@@ -131,9 +131,39 @@ class UserTrack(Plugin):
     irc_kick = irc_part
 
     def irc_mode(self, msg):
-        prefix = prefix_parse(self.isupport.supported.get('PREFIX'))
         modegroups = self.isupport.supported.get('CHANMODES')
-        pass
+        prefix = prefix_parse(self.isupport.supported.get('PREFIX'))
+
+        target = msg.args[0]
+        modes = msg.args[1]
+        params = msg.args[2:]
+
+        # We don't care about user modes right now, so if the target isn't a
+        # channel, we discard the message.
+        channels = tuple(self.isupport.supported.get("CHANTYPES"))
+        if not target.startswith(channels):
+            return
+
+        gen = mode_parse(modes, params, modegroups, prefix)
+        prefix = prefix.mode_to_prefix
+        for mode, param, adding in gen:
+            # There are a bunch of other types of modes, but we only care about
+            # prefix modes because they are the only ones which can be applied
+            # to users in the way we want.
+            if mode in prefix:
+                user = self.get_user(param)
+                if not user:
+                    LOG.warning('User %s is not known. Skipping changing of mode %s', param, mode)
+                    continue
+
+                if adding:
+                    LOG.info("Setting mode %s for %s in %s", mode, param, target)
+                    user.channels[target].add(mode)
+                else:
+                    LOG.info("Unsetting mode %s for %s in %s", mode, param, target)
+                    user.channels[target].discard(mode)
+
+                LOG.info("Modes for %s in %s: %s", param, target, user.channels[target])
 
     def irc_quit(self, msg):
         self.remove_user(msg.identity.name)
