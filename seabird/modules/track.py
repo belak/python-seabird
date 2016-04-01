@@ -10,7 +10,6 @@ LOG = logging.getLogger(__name__)
 class User:
     def __init__(self, nick):
         self.nick = nick
-        self.away = False
         self.channels = {}
 
 
@@ -79,10 +78,6 @@ class UserTrack(Plugin):
 
             user.channels[channel] = modes
             LOG.info('Modes for %s in %s are %s', nick, channel, modes)
-
-    def irc_away(self, msg):
-        user = self.get_user(msg.identity.name)
-        user.away = bool(msg.args)
 
     def irc_nick(self, msg):
         oldnick = msg.identity.name
