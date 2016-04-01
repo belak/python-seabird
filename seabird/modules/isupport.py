@@ -9,6 +9,7 @@ from copy import deepcopy
 from collections import namedtuple
 import logging
 import re
+from string import ascii_letters
 
 from seabird.plugin import Plugin
 
@@ -44,6 +45,34 @@ def status_prefix_parse(prefix, string):
         modes.add(prefix[prefix_char])
 
     return (modes, string)
+
+
+def mode_parse(modes, params, modegroups, prefix):
+    prefix = prefix.mode_to_prefix
+    params = list(params)
+    status = ''.join(mode for mode in prefix if mode in ascii_letters)
+
+    # Groups of modes
+    group_pop_add = modegroups[0] + modegroups[1] + modegroups[2] + status
+    group_pop_remove = modegroups[0] + modegroups[2] + status
+
+    adding = True
+    group = group_pop_add
+    for char in modes:
+        if char == '+':
+            adding = True
+            group = group_pop_add
+            continue
+        elif char == '-':
+            adding = False
+            group = group_pop_remove
+            continue
+
+        param = None
+        if char in group:
+            param = params.pop(0)
+
+        yield (char, param, adding)
 
 
 class ISupportPlugin(Plugin):
