@@ -35,7 +35,7 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
         if not self.bot.from_channel(msg):
             return
 
-        if self.regex.match(msg.trailing):
+        if self.regex.search(msg.trailing):
             with self.db.session() as session:
                 for (item, operation) in self.regex.findall(msg.trailing):
                     normalized_item = item.lower()
