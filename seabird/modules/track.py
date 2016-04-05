@@ -75,7 +75,7 @@ class UserTrack(Plugin):
 
     def irc_join(self, msg):
         user = self.add_user(msg.identity.name)
-        user.channels[msg.params[0]] = set()
+        user.channels[msg.args[0]] = set()
 
     def irc_nick(self, msg):
         oldnick = msg.identity.name
