@@ -23,7 +23,7 @@ class MultiMention(Base):
 
 
 class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
-    regex = re.compile(r'@(?P<group>[^\s]+):')
+    regex = re.compile(r'@(?P<group>[^\s]+)\b')
 
     def _get_mention_groups(self, group_name=None):
         '''
@@ -50,17 +50,17 @@ class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
             else:
                 return group_members[group_name]
 
-    def _rm_mention(self, group_name, nick=None):
+    def _rm_mention(self, group_name, nicks=None):
         '''
-        Remove mention group with name `group_name`. If `nick` is supplied, only
-        remove `nick` from mention group.
+        Remove mention group with name `group_name`. If `nicks` is supplied,
+        only remove `nicks` from mention group.
 
         @param string group_name Name of group to remove
-        @param string? nick Nick to be removed from `group_name`
+        @param [string]? nicks Nicks to be removed from `group_name`
         '''
         with self.db.session() as session:
             query = session.query(MultiMention)
-            if nick is None:
+            if nicks is None:
                 query = query.filter(
                     MultiMention.group_name == group_name
                 )
@@ -68,7 +68,7 @@ class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
                 query = query.filter(
                     and_(
                         MultiMention.group_name == group_name,
-                        MultiMention.nick == nick,
+                        MultiMention.nick.in_(nicks),
                     )
                 )
             mmentions = query.all()
@@ -118,11 +118,11 @@ class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
 
     def _cmd_add(self, msg, args):
         '''
-        Add `nick` to mention group named `group_name`. If `group_name` doesn't
-        exist it will be created.
+        Add `nicks` to mention group named `group_name`.
+        If `group_name` doesn't exist it will be created.
 
         `group_name` is args[0]
-        `nick` is args[1]
+        `nicks` is args[1:]
         '''
         if len(args) < 2:
             self.bot.reply(
@@ -132,27 +132,33 @@ class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
             return
 
         group_name = args[0]
-        nick = args[1]
+        nicks = args[1:]
 
-        try:
-            mmention = MultiMention()
-            mmention.group_name = group_name
-            mmention.nick = nick
-            with self.db.session() as session:
-                session.add(mmention)
-            self.bot.reply(msg, 'Added {} to {}'.format(nick, group_name))
-        except IntegrityError:
-            self.bot.reply(
-                msg,
-                '{} already contains {}'.format(group_name, nick),
-            )
+        successful_nicks = []
+        for nick in nicks:
+            try:
+                mmention = MultiMention()
+                mmention.group_name = group_name
+                mmention.nick = nick
+                with self.db.session() as session:
+                    session.add(mmention)
+                successful_nicks.append(nick)
+            except IntegrityError:
+                self.bot.reply(
+                    msg,
+                    '{} already contains {}'.format(group_name, nick),
+                )
+        self.bot.reply(
+            msg,
+            'Added {} to {}'.format(', '.join(successful_nicks), group_name),
+        )
 
     def _cmd_rm(self, msg, args):
         '''
-        Remove either a member from a group or an entire group.
+        Remove either members from a group or an entire group itself.
 
         `group_name` is args[0]
-        `nick` is args[1]
+        `nicks` is args[1:]
         '''
         if len(args) < 1:
             self.bot.reply(
@@ -162,23 +168,20 @@ class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
             return
 
         group_name = args[0]
-        nick = None
+        nicks = None
         if len(args) > 1:
-            nick = args[1]
+            nicks = args[1:]
 
-        try:
-            self._rm_mention(group_name, nick)
-            if nick is None:
-                self.bot.reply(msg, 'Deleted group {}'.format(group_name))
-            else:
-                self.bot.reply(
-                    msg,
-                    'Removed {} from to {}'.format(nick, group_name),
-                )
-        except IntegrityError:
+        self._rm_mention(group_name, nicks)
+        if nicks is None:
+            self.bot.reply(msg, 'Deleted group {}'.format(group_name))
+        else:
             self.bot.reply(
                 msg,
-                '{} already contains {}'.format(group_name, nick),
+                'Removed {} from to {}'.format(
+                    ', '.join(nicks),
+                    group_name,
+                ),
             )
 
     def cmd_mmention(self, msg):
