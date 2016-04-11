@@ -18,7 +18,10 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
     regex = re.compile(r'([^\s]+)(\+\+|--)(?:\s|$)')
 
     def cmd_karma(self, msg):
-        normalized_item = msg.trailing.lower()
+        normalized_item = msg.trailing.lower().strip()
+        if normalized_item == '':
+            normalized_item = msg.identity.name
+
         with self.db.session() as session:
             score = Karma.score.default.arg
 
@@ -26,7 +29,10 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
             if k:
                 score = k.score
 
-            self.bot.reply(msg, "%s's karma is %d" % (msg.trailing, score))
+            self.bot.reply(
+                msg,
+                "{}'s karma is {}".format(normalized_item, score),
+            )
 
     def irc_privmsg(self, msg):
         # We need to call super here so cmd_karma can be called
