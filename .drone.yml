@@ -6,3 +6,10 @@ build:
     - pip install pylint
     - flake8 seabird
     - pylint seabird
+deploy:
+  ssh:
+    host: $$FAB_HOST
+    user: deploy
+    commands:
+      - cd fabfile && ~/.virtualenvs/fabfile/bin/fab seabird.build
+      - cd fabfile && ~/.virtualenvs/fabfile/bin/fab seabird.deploy
