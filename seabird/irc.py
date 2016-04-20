@@ -113,6 +113,12 @@ class Protocol(asyncio.Protocol):
         self.buf = ''
         self.handshake_done = False
 
+        # NOTE: handshake is provided so a method can hook into connection_made
+        # after the variables have been cleared, but before we send data to the
+        # server.
+        self.handshake()
+
+    def handshake(self):
         if self.password is not None:
             self.write('PASS', self.password)
 
@@ -121,9 +127,9 @@ class Protocol(asyncio.Protocol):
             for cap in self.caps_requested:
                 self.write('CAP', 'REQ', cap)
         else:
-            self.handshake()
+            self.finalize_handshake()
 
-    def handshake(self):
+    def finalize_handshake(self):
         self.write('CAP', 'END')
         self.write('NICK', self.nick)
         self.write('USER', self.user, '0.0.0.0', '0.0.0.0', self.name)
@@ -162,7 +168,7 @@ class Protocol(asyncio.Protocol):
 
                     enough_caps = len(self.caps_available) <= len(self.caps_requested)
                     if not self.handshake_done and enough_caps:
-                        self.handshake()
+                        self.finalize_handshake()
                 elif msg.args[0] == 'NAK':
                     raise RuntimeError('CAP(s)) {} not supported by server'.format(msg.args[1:]))
             elif msg.event == "PING":

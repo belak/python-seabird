@@ -30,6 +30,24 @@ class Bot(Protocol):
 
         self.loop = loop
 
+    def handshake(self):
+        # NOTE: This is actually the dispatch for connection_made, but because
+        # we need to do the processing for the IRCProtocol before this is
+        # called, we override handshake.
+
+        # Dispatch this event.
+        for plugin in self.plugins:
+            plugin.connection_made(self.transport)
+
+        super().handshake()
+
+    def connection_lost(self, exc):
+        super().connection_lost(exc)
+
+        # Dispatch this event
+        for plugin in self.plugins:
+            plugin.connection_lost(exc)
+
     def dispatch(self, msg):
         if msg.event == '001':
             for line in self.config.get('CMDS', []):

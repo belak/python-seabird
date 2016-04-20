@@ -27,6 +27,7 @@ class UserTrack(Plugin):
         # about.
         self.users = {}
 
+    def connection_made(self, _):
         # We use multi-prefix to simplify a few operations. Because it's part
         # of the core IRCv3.1 spec, it should be supported almost everywhere.
         self.bot.cap_req('multi-prefix')
