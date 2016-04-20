@@ -27,19 +27,21 @@ the important settings are outlined below:
 
 ### Basic settings
 
-| Setting        | Required | Description                                             |
-|----------------+----------+---------------------------------------------------------|
-| NICK           | Yes      | IRC nickname                                            |
-| PASS           |          | IRC password                                            |
-| USER           | Yes      | IRC username                                            |
-| NAME           | Yes      | IRC full name                                           |
-| HOST           | Yes      | Hostname of the IRC server to connect to                |
-| PORT           | Yes      | Port of the IRC server to connect to                    |
-| CMDS           |          | List of commands to run after a welcome msg is received |
-| PLUGIN_CLASSES |          | List of plugin classes to load                          |
-| PLUGIN_MODULES |          | List of plugin modules to load                          |
-| SSL            |          | True if the server needs SSL, False otherwise           |
-| SSL_VERIFY     |          | True if the server has a valid cert, False otherwise    |
+| Setting              | Required | Description                                             |
+|----------------------+----------+---------------------------------------------------------|
+| NICK                 | Yes      | IRC nickname                                            |
+| PASS                 |          | IRC password                                            |
+| USER                 | Yes      | IRC username                                            |
+| NAME                 | Yes      | IRC full name                                           |
+| HOST                 | Yes      | Hostname of the IRC server to connect to                |
+| PORT                 | Yes      | Port of the IRC server to connect to                    |
+| CMDS                 |          | List of commands to run after a welcome msg is received |
+| PLUGIN_CLASSES       |          | List of plugin classes to load                          |
+| PLUGIN_MODULES       |          | List of plugin modules to load                          |
+| SSL                  |          | True if the server needs SSL, False otherwise           |
+| SSL_VERIFY           |          | True if the server has a valid cert, False otherwise    |
+| RECONNECT_ON_FAILURE |          | Reconnect on connection lost                            |
+| RECONNECT_DELAY      |          | Delay between connection lost and reconnecting.         |
 
 ### Plugin settings
 

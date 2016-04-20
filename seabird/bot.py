@@ -50,10 +50,12 @@ class Bot(Protocol):
 
         # If the config tells us to restart, we restart. Otherwise we
         # completely bail so this isn't silently lost.
-        reconnect_delay = self.config.get('RECONNECT_DELAY')
-        if reconnect_delay is not None:
-            # This will allow the loop to run until we want to reconnect.
-            self.loop.run_until_complete(asyncio.sleep(reconnect_delay))
+        if self.config.get('RECONNECT_ON_FAILURE', True):
+            reconnect_delay = self.config.get('RECONNECT_DELAY', 5)
+
+            if reconnect_delay > 0:
+                # This will allow the loop to run until we want to reconnect.
+                self.loop.run_until_complete(asyncio.sleep(reconnect_delay))
 
             bot = Bot(self.config, loop=self.loop)
             bot.run()
