@@ -38,10 +38,10 @@ the important settings are outlined below:
 | CMDS                 |          | List of commands to run after a welcome msg is received |
 | PLUGIN_CLASSES       |          | List of plugin classes to load                          |
 | PLUGIN_MODULES       |          | List of plugin modules to load                          |
+| RECONNECT_DELAY      |          | Delay between connection lost and reconnecting.         |
+| RECONNECT_ON_FAILURE |          | Reconnect on connection lost                            |
 | SSL                  |          | True if the server needs SSL, False otherwise           |
 | SSL_VERIFY           |          | True if the server has a valid cert, False otherwise    |
-| RECONNECT_ON_FAILURE |          | Reconnect on connection lost                            |
-| RECONNECT_DELAY      |          | Delay between connection lost and reconnecting.         |
 
 ### Plugin settings
 
