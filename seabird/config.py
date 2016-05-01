@@ -12,12 +12,19 @@ class Config(dict):
     def networks(self):
         networks = self.get('NETWORKS')
         if networks is None:
-            return [self]
+            return {'main': self}
 
-        ret = []
-        for network in networks:
-            conf = self.copy()
-            conf.update(network)
-            ret.append(conf)
+        ret = {}
+
+        if isinstance(networks, dict):
+            for name, network in networks.items():
+                conf = self.copy()
+                conf.update(network)
+                ret[name] = conf
+        else:
+            for network in networks:
+                conf = self.copy()
+                conf.update(network)
+                ret[conf['id']] = conf
 
         return ret
