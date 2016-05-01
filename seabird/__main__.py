@@ -1,11 +1,8 @@
-from asyncio import get_event_loop
 import logging
 
 from colorlog import ColoredFormatter
 
 from .manager import BotManager
-from .config import Config
-from .bot import Bot
 
 
 def main():
