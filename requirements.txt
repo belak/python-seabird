@@ -1,11 +1,10 @@
-aiohttp==0.21.0
-alembic==0.8.4
+aiohttp==0.21.5
+alembic==0.8.6
 chardet==2.3.0
-colorlog==2.6.1
+colorlog==2.6.3
 isodate==0.5.4
-Mako==1.0.3
+lxml==3.6.0
+Mako==1.0.4
 MarkupSafe==0.23
-lxml==3.5.0
-python-editor==0.5
+python-editor==1.0
 SQLAlchemy==1.0.12
-wheel==0.29.0
