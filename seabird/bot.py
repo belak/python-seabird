@@ -48,6 +48,20 @@ class Bot(Protocol):
         for plugin in self.plugins:
             plugin.connection_lost(exc)
 
+        # If the config tells us to restart, we restart. Otherwise we
+        # completely bail so this isn't silently lost.
+        if self.config.get('RECONNECT_ON_FAILURE', True):
+            reconnect_delay = self.config.get('RECONNECT_DELAY', 5)
+
+            if reconnect_delay > 0:
+                # This will allow the loop to run until we want to reconnect.
+                self.loop.run_until_complete(asyncio.sleep(reconnect_delay))
+
+            bot = Bot(self.config, loop=self.loop)
+            bot.run()
+        else:
+            self.loop.stop()
+
     def dispatch(self, msg):
         if msg.event == '001':
             for line in self.config.get('CMDS', []):
@@ -139,6 +153,8 @@ class Bot(Protocol):
                                                 port=self.config['PORT'],
                                                 ssl=ssl_ctx)
 
+        # Run until complete here will only run until the we are connected, not
+        # until the connection is finished.
         self.loop.run_until_complete(connector)
 
     def run_forever(self):
