@@ -15,16 +15,9 @@ class Config(dict):
             return {'main': self}
 
         ret = {}
-
-        if isinstance(networks, dict):
-            for name, network in networks.items():
-                conf = self.copy()
-                conf.update(network)
-                ret[name] = conf
-        else:
-            for network in networks:
-                conf = self.copy()
-                conf.update(network)
-                ret[conf['id']] = conf
+        for name, network in networks.items():
+            conf = self.copy()
+            conf.update(network)
+            ret[name] = conf
 
         return ret
