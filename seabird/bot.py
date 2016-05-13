@@ -128,6 +128,12 @@ class Bot(Protocol):
                     if not inspect.isclass(obj) or obj.__module__ != module:
                         continue
 
+                    # We want to skip any class which is set to disabled,
+                    # because they need to be explicitly loaded in
+                    # PLUGIN_CLASSES.
+                    if getattr(obj, '__disabled__', False):
+                        continue
+
                     # We attempt to load all classes, but ignore the
                     # failures
                     try:
