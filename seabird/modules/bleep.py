@@ -17,6 +17,8 @@ class Bleep(Base):
 
 
 class BleepPlugin(Plugin, CommandMixin, DatabaseMixin):
+    __disabled__ = True
+
     REPLIES = [
         'Hey, watch your mouth! Say "{}" instead.',
         'Pottymouth! We say "{}" in this channel.',
