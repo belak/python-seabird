@@ -46,13 +46,17 @@ class URLPlugin(Plugin):
     async def url_callback(self, msg, url):
         async with aiohttp.get(url) as resp:
             # Read up to 1m
-            data = await resp.content.read(1024*1024)
+            try:
+                data = await resp.content.readexactly(1024*1024)
+            except asyncio.IncompleteReadError as exc:
+                data = exc.partial
+
             if not data:
                 return
 
             # lxml has an implementation of xpath, so we use that to search for
             # the title tag.
-            tree = lxml.html.fromstring(str(data))
+            tree = lxml.html.fromstring(data)
             title = tree.find(".//title")
             if title is None or title.text is None:
                 return
