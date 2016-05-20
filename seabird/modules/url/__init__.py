@@ -46,7 +46,11 @@ class URLPlugin(Plugin):
     async def url_callback(self, msg, url):
         async with aiohttp.get(url) as resp:
             # Read up to 1m
-            data = await resp.content.read(1024*1024)
+            try:
+                data = await resp.content.readexactly(1024*1024)
+            except asyncio.IncompleteReadError as exc:
+                data = exc.partial
+
             if not data:
                 return
 
