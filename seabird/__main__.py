@@ -1,10 +1,8 @@
-from asyncio import get_event_loop
 import logging
 
 from colorlog import ColoredFormatter
 
-from .config import Config
-from .bot import Bot
+from .manager import BotManager
 
 
 def main():
@@ -16,16 +14,9 @@ def main():
     root_logger.addHandler(root_handler)
     root_logger.setLevel(logging.DEBUG)
 
-    loop = get_event_loop()
-
-    conf = Config()
-    conf.from_module('config')
-    for network in conf.networks:
-        print(network)
-        bot = Bot(network, loop=loop)
-        bot.run()
-
-    loop.run_forever()
-    loop.close()
+    # Start up the bot manager and the bots
+    manager = BotManager()
+    manager.start()
+    manager.run()
 
 main()

@@ -51,6 +51,14 @@ the important settings are outlined below:
 | FORECAST_KEY | Weather              | API key for forecast.io                     |
 | DB_URI       | DB, karma, weather   | SQLAlchemy Database URI                     |
 
+### Networks
+
+seabird can be run on multiple networks with the same process. The `NETWORKS`
+config option is a dict mapping of server ID (something to uniquely identify the
+connection) to additional network options. The base of the config file will
+contain all common options and each item in the `NETWORKS` option will be
+overlayed onto a copy of the base.
+
 ### Running seabird
 
 seabird can be run with the command `python -m seabird`
