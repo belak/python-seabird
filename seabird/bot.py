@@ -22,7 +22,7 @@ class Bot(Protocol):
         self.config = config
 
         self.plugins = []
-        self.current_nick = self.config['NICK']
+        self.current_nick = self.config["NICK"]
 
         # Initialize the underlying protocol
         super().__init__()
@@ -30,12 +30,14 @@ class Bot(Protocol):
     def connection_made(self, transport):
         super().connection_made(transport)
 
-        password = self.config.get('PASS')
+        password = self.config.get("PASS")
         if password is not None:
-            self.write('PASS', password)
+            self.write("PASS", password)
 
-        self.write('NICK', self.config['NICK'])
-        self.write('USER', self.config['USER'], '0.0.0.0', '0.0.0.0', self.config['NAME'])
+        self.write("NICK", self.config["NICK"])
+        self.write(
+            "USER", self.config["USER"], "0.0.0.0", "0.0.0.0", self.config["NAME"]
+        )
 
         # Dispatch this event.
         for plugin in self.plugins:
@@ -53,20 +55,22 @@ class Bot(Protocol):
     def run(self):
         """Run the bot and wait for it to die"""
         # Make sure to set the current nick
-        self.current_nick = self.config['NICK']
+        self.current_nick = self.config["NICK"]
 
-        plugin_classes = self.config.get('PLUGIN_CLASSES')
-        plugin_modules = self.config.get('PLUGIN_MODULES')
+        plugin_classes = self.config.get("PLUGIN_CLASSES")
+        plugin_modules = self.config.get("PLUGIN_MODULES")
         if plugin_classes is None and plugin_modules is None:
             plugin_modules = []
-            for _, name, _ in walk_packages(modules.__path__, 'seabird.modules.'):  # noqa
+            for _, name, _ in walk_packages(
+                modules.__path__, "seabird.modules."
+            ):  # noqa
                 plugin_modules.append(name)
 
         # These are modules which contain multiple plugins. All
         # plugins which are found in these modules will be loaded.
         if plugin_modules is not None:
             for module in plugin_modules:
-                LOG.info('Loaded module %s', module)
+                LOG.info("Loaded module %s", module)
 
                 mod = import_module(module)
 
@@ -79,7 +83,7 @@ class Bot(Protocol):
                     # We want to skip any class which is set to disabled,
                     # because they need to be explicitly loaded in
                     # PLUGIN_CLASSES.
-                    if getattr(obj, '__disabled__', False):
+                    if getattr(obj, "__disabled__", False):
                         continue
 
                     # We attempt to load all classes, but ignore the
@@ -91,21 +95,23 @@ class Bot(Protocol):
 
         # These are all plugins which are explicitly loaded
         if plugin_classes is not None:
-            for class_name in self.config.get('PLUGIN_CLASSES', {}):
+            for class_name in self.config.get("PLUGIN_CLASSES", {}):
                 self.load_plugin(class_name)
 
         # Create an SSL context if we asked for one
         ssl_ctx = None
-        if self.config['SSL']:
+        if self.config["SSL"]:
             ssl_ctx = ssl.create_default_context()
-            if not self.config.get('SSL_VERIFY', True):
+            if not self.config.get("SSL_VERIFY", True):
                 ssl_ctx.check_hostname = False
                 ssl_ctx.verify_mode = ssl.CERT_NONE
 
-        connector = self.loop.create_connection(lambda: self,
-                                                host=self.config['HOST'],
-                                                port=self.config['PORT'],
-                                                ssl=ssl_ctx)
+        connector = self.loop.create_connection(
+            lambda: self,
+            host=self.config["HOST"],
+            port=self.config["PORT"],
+            ssl=ssl_ctx,
+        )
 
         # Run until complete here will only run until the we are connected,
         # not until the connection is finished.
@@ -117,23 +123,22 @@ class Bot(Protocol):
 
     def dispatch(self, msg):
         # Ensure current_nick is up to date
-        if msg.event == '001':
+        if msg.event == "001":
             self.current_nick = msg.args[0]
-        elif (msg.event == 'NICK' and
-              msg.identity.name == self.current_nick):
+        elif msg.event == "NICK" and msg.identity.name == self.current_nick:
             self.current_nick = msg.args[0]
         elif msg.event == "437" or msg.event == "433":
-            self.current_nick += '_'
-            self.write('NICK', self.current_nick)
+            self.current_nick += "_"
+            self.write("NICK", self.current_nick)
 
         # If we just connected, send all lines
-        if msg.event == '001':
-            for line in self.config.get('CMDS', []):
+        if msg.event == "001":
+            for line in self.config.get("CMDS", []):
                 self.write_line(line)
 
         # Ping pong
-        if msg.event == 'PING':
-            self.write('PONG', *msg.args)
+        if msg.event == "PING":
+            self.write("PONG", *msg.args)
 
         # Attach the current nick to the message for callbacks
         msg.current_nick = self.current_nick
@@ -150,12 +155,12 @@ class Bot(Protocol):
         if inspect.isclass(obj):
             plugin_class = obj
         else:
-            module, _, name = obj.rpartition('.')
+            module, _, name = obj.rpartition(".")
             module = import_module(module)
             plugin_class = getattr(module, name)
 
         if Plugin not in inspect.getmro(plugin_class):
-            raise TypeError('Class {} is not a valid Plugin'.format(obj))
+            raise TypeError("Class {} is not a valid Plugin".format(obj))
 
         # If it's already loaded, we should just return the already loaded
         # instance.
@@ -169,7 +174,7 @@ class Bot(Protocol):
         # Add the plugin to the list
         self.plugins.append(plugin)
 
-        LOG.info('Loaded plugin %s', plugin_class)
+        LOG.info("Loaded plugin %s", plugin_class)
 
         return plugin
 
@@ -179,16 +184,16 @@ class Bot(Protocol):
         """Reply to and mention the user in the given event"""
         # If the event came from a channel, prepend the nick it came from
         if event.from_channel:
-            msg = '{}: {}'.format(event.identity.name, msg)
+            msg = "{}: {}".format(event.identity.name, msg)
 
         self.reply(event, msg)
 
     def reply(self, event, msg):
         """Convenience function which replies to a message"""
         if len(event.args) < 1 or len(event.args[0]) < 1:
-            raise ValueError('Invalid IRC event')
+            raise ValueError("Invalid IRC event")
 
         if event.from_channel:
-            self.write('PRIVMSG', event.args[0], msg)
+            self.write("PRIVMSG", event.args[0], msg)
         else:
-            self.write('PRIVMSG', event.identity.name, msg)
+            self.write("PRIVMSG", event.identity.name, msg)

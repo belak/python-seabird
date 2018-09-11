@@ -50,7 +50,7 @@ def status_prefix_parse(prefix, string):
 def mode_parse(modes, params, modegroups, prefix):
     prefix = prefix.mode_to_prefix
     params = list(params)
-    status = ''.join(mode for mode in prefix if mode in ascii_letters)
+    status = "".join(mode for mode in prefix if mode in ascii_letters)
 
     # Groups of modes
     group_pop_add = modegroups[0] + modegroups[1] + modegroups[2] + status
@@ -59,11 +59,11 @@ def mode_parse(modes, params, modegroups, prefix):
     adding = True
     group = group_pop_add
     for char in modes:
-        if char == '+':
+        if char == "+":
             adding = True
             group = group_pop_add
             continue
-        elif char == '-':
+        elif char == "-":
             adding = False
             group = group_pop_remove
             continue
@@ -77,11 +77,11 @@ def mode_parse(modes, params, modegroups, prefix):
 
 class ISupportPlugin(Plugin):
     defaults = {
-        "PREFIX": ['o', 'v', '@', '+'],
-        "CHANTYPES": '#&!+',
+        "PREFIX": ["o", "v", "@", "+"],
+        "CHANTYPES": "#&!+",
         "NICKLEN": "8",
         "CASEMAPPING": "RFC1459",
-        "CHANMODES": ['b', 'k', 'l', 'imnstp'],
+        "CHANMODES": ["b", "k", "l", "imnstp"],
     }
 
     def __init__(self, bot):
@@ -93,29 +93,30 @@ class ISupportPlugin(Plugin):
     def irc_005(self, msg):
         # This is based off of PyIRC.extensions.isupport.ISupport.isupport and
         # PyIRC.auxparse.isupport_parse.
-        if not msg.args[-1].endswith('server'):
-            raise ValueError('Really old IRC server. '
-                             'It may be fine, but things might break.')
+        if not msg.args[-1].endswith("server"):
+            raise ValueError(
+                "Really old IRC server. It may be fine, but things might break."
+            )
 
         # Note that we skip the first and last args because the first is our
         # nick and the last should be "are supported by this server"
         supported = {}
         for param in msg.args[1:-1]:
             # Split into key, value pairs
-            key, _, value = param.partition('=')
+            key, _, value = param.partition("=")
 
             # eg, EXCEPTS
             if not value:
-                LOG.info('ISUPPORT [k]: %s', key)
+                LOG.info("ISUPPORT [k]: %s", key)
                 supported[key] = True
                 continue
 
             # Split into CSVs. For each CSV, parse into pairs of val, data.
             ret_dict = {}
             ret_list = []
-            for inner_val in value.split(','):
+            for inner_val in value.split(","):
                 # eg, MAXLIST=ACCEPT:,TEST:5
-                val, sep, data = inner_val.rpartition(':')
+                val, sep, data = inner_val.rpartition(":")
                 if sep:
                     if not data:
                         data = None
@@ -132,7 +133,7 @@ class ISupportPlugin(Plugin):
             # rare... and there isn't really a proper way to handle it so we
             # just ignore it.
             if ret_list and ret_dict:
-                raise ValueError('ISupport with both list and dict value')
+                raise ValueError("ISupport with both list and dict value")
 
             # If the dict and list are empty, we just enable the value
             if ret_dict:
@@ -142,6 +143,6 @@ class ISupportPlugin(Plugin):
             else:
                 supported[key] = True
 
-            LOG.info('ISUPPORT [k:v] %s:%s', key, supported[key])
+            LOG.info("ISUPPORT [k:v] %s:%s", key, supported[key])
 
         self.supported.update(supported)

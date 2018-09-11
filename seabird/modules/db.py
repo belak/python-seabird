@@ -34,8 +34,7 @@ class DatabasePlugin(Plugin):
     def __init__(self, bot):
         super().__init__(bot)
 
-        self.engine = create_engine(self.bot.config.get('DB_URI',
-                                                        'sqlite:///bot.db'))
+        self.engine = create_engine(self.bot.config.get("DB_URI", "sqlite:///bot.db"))
         self.engine.connect()
 
         # We need to use our own session class so we can add methods onto
@@ -66,4 +65,6 @@ class DatabaseMixin:
     def __init__(self):
         super().__init__()
 
-        self.db = self.bot.load_plugin(DatabasePlugin)  # noqa # pylint: disable=invalid-name
+        self.db = self.bot.load_plugin(
+            DatabasePlugin
+        )  # noqa # pylint: disable=invalid-name

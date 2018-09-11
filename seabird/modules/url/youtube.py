@@ -9,9 +9,11 @@ from . import URLPlugin, URLMixin
 from ..utils import fetch_json
 
 
-YOUTUBE_URL = ("https://www.googleapis.com/youtube/v3/videos?"
-               "part=contentDetails%2Csnippet&id={}&"
-               "fields=items(contentDetails%2Csnippet)&key={}")
+YOUTUBE_URL = (
+    "https://www.googleapis.com/youtube/v3/videos?"
+    "part=contentDetails%2Csnippet&id={}&"
+    "fields=items(contentDetails%2Csnippet)&key={}"
+)
 
 
 class YoutubeURLPlugin(Plugin, URLMixin):
@@ -22,10 +24,10 @@ class YoutubeURLPlugin(Plugin, URLMixin):
 
     def url_match(self, msg, url):
         video_id = None
-        if url.netloc == 'youtube.com':
+        if url.netloc == "youtube.com":
             query = parse_qs(url.query)
             video_id = query.get("v")[0]
-        elif url.netloc == 'youtu.be':
+        elif url.netloc == "youtu.be":
             video_id = url.path[1:]
 
         if video_id is None:
@@ -36,12 +38,12 @@ class YoutubeURLPlugin(Plugin, URLMixin):
         return True
 
     async def url_callback(self, msg, video_id):
-        url = YOUTUBE_URL.format(video_id, self.bot.config['YOUTUBE_KEY'])
+        url = YOUTUBE_URL.format(video_id, self.bot.config["YOUTUBE_KEY"])
         data = await fetch_json(url)
 
         # Pull what we need out of the response
-        video = data['items'][0]
-        duration = parse_duration(video['contentDetails']['duration'])
-        title = video['snippet']['title']
+        video = data["items"][0]
+        duration = parse_duration(video["contentDetails"]["duration"])
+        title = video["snippet"]["title"]
 
-        self.bot.reply(msg, '[YouTube] {} ~ {}'.format(title, duration))
+        self.bot.reply(msg, "[YouTube] {} ~ {}".format(title, duration))

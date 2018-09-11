@@ -14,7 +14,7 @@ FORECAST_URL = "https://api.forecast.io/forecast/{}/{:.4f},{:.4f}"
 
 
 class WeatherLocation(Base):
-    __tablename__ = 'weather_locations'
+    __tablename__ = "weather_locations"
 
     nick = Column(String, primary_key=True)
     address = Column(String)
@@ -26,18 +26,21 @@ class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
     def __init__(self, bot):
         super().__init__(bot)
 
-        self.key = bot.config['FORECAST_KEY']
+        self.key = bot.config["FORECAST_KEY"]
 
     async def fetch_location(self, msg):
         search_loc = msg.trailing.strip()
         loc = None
         if not search_loc:
             with self.db.session() as session:
-                db_loc = session.query(WeatherLocation).filter(
-                    WeatherLocation.nick == msg.identity.name).one_or_none()
+                db_loc = (
+                    session.query(WeatherLocation)
+                    .filter(WeatherLocation.nick == msg.identity.name)
+                    .one_or_none()
+                )
 
                 if not db_loc:
-                    raise LocationException('No stored location found.')
+                    raise LocationException("No stored location found.")
 
                 loc = Location(db_loc.address, db_loc.lat, db_loc.lon)
 
@@ -46,8 +49,9 @@ class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
 
         # Update the stored location for the given nick
         with self.db.session() as session:
-            weather_loc, _ = session.get_or_create(WeatherLocation,
-                                                   nick=msg.identity.name)
+            weather_loc, _ = session.get_or_create(
+                WeatherLocation, nick=msg.identity.name
+            )
             weather_loc.address = loc.address
             weather_loc.lat = loc.lat
             weather_loc.lon = loc.lon
@@ -68,30 +72,28 @@ class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
             return
 
         url = FORECAST_URL.format(self.key, loc.lat, loc.lon)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status != 200:
-                    self.bot.mention_reply(msg, 'Could not get weather data.')
-                    return
+        async with aiohttp.ClientSession() as session, session.get(url) as resp:
+            if resp.status != 200:
+                self.bot.mention_reply(msg, "Could not get weather data.")
+                return
 
-                data = await resp.json()
+            data = await resp.json()
+
+            self.bot.mention_reply(msg, "3 day forecast for {}.".format(loc.address))
+            for day in data["daily"]["data"][:3]:
+                weekday = date.fromtimestamp(day["time"]).strftime("%A")
+                print(day)
 
                 self.bot.mention_reply(
-                    msg, '3 day forecast for {}.'.format(loc.address))
-                for day in data['daily']['data'][:3]:
-                    weekday = date.fromtimestamp(day['time']).strftime('%A')
-                    print(day)
-
-                    self.bot.mention_reply(
-                        msg,
-                        "{}: High {:.2f}, Low {:.2f}, Humidity {:.0f}. {}".format(
-                            weekday,
-                            day['temperatureMax'],
-                            day['temperatureMin'],
-                            day['humidity']*100,
-                            day['summary'],
-                        ),
-                    )
+                    msg,
+                    "{}: High {:.2f}, Low {:.2f}, Humidity {:.0f}. {}".format(
+                        weekday,
+                        day["temperatureMax"],
+                        day["temperatureMin"],
+                        day["humidity"] * 100,
+                        day["summary"],
+                    ),
+                )
 
     def cmd_weather(self, msg):
         loop = asyncio.get_event_loop()
@@ -105,26 +107,25 @@ class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
             return
 
         url = FORECAST_URL.format(self.key, loc.lat, loc.lon)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status != 200:
-                    self.bot.mention_reply(msg, 'Could not get weather data.')
-                    return
+        async with aiohttp.ClientSession() as session, session.get(url) as resp:
+            if resp.status != 200:
+                self.bot.mention_reply(msg, "Could not get weather data.")
+                return
 
-                data = await resp.json()
+            data = await resp.json()
 
-                today = data['daily']['data'][0]
-                currently = data['currently']
+            today = data["daily"]["data"][0]
+            currently = data["currently"]
 
-                self.bot.mention_reply(
-                    msg,
-                    "{}. Currently {:.1f}. High {:.2f}, Low {:.2f}, "
-                    "Humidity {:.0f}. {}.".format(
-                        loc.address,
-                        currently['temperature'],
-                        today['temperatureMax'],
-                        today['temperatureMin'],
-                        currently['humidity']*100,
-                        currently['summary'],
-                    ),
-                )
+            self.bot.mention_reply(
+                msg,
+                "{}. Currently {:.1f}. High {:.2f}, Low {:.2f}, "
+                "Humidity {:.0f}. {}.".format(
+                    loc.address,
+                    currently["temperature"],
+                    today["temperatureMax"],
+                    today["temperatureMin"],
+                    currently["humidity"] * 100,
+                    currently["summary"],
+                ),
+            )

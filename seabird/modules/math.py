@@ -11,26 +11,34 @@ class MathError(Exception):
 
 class MathPlugin(Plugin, CommandMixin):
     # supported operators
-    operators = {ast.Add: operator.add, ast.Sub: operator.sub,
-                 ast.Mult: operator.mul, ast.Div: operator.truediv,
-                 ast.Pow: operator.pow, ast.BitXor: operator.xor,
-                 ast.USub: operator.neg, ast.Mod: operator.mod}
+    operators = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.Pow: operator.pow,
+        ast.BitXor: operator.xor,
+        ast.USub: operator.neg,
+        ast.Mod: operator.mod,
+    }
 
-    constants = {'PI': math.pi, 'E': math.e}
+    constants = {"PI": math.pi, "E": math.e}
 
-    functions = {'pow': math.pow,
-                 'log': math.log,
-                 'sin': math.sin,
-                 'cos': math.cos,
-                 'tan': math.tan,
-                 'asin': math.asin,
-                 'acos': math.acos,
-                 'atan': math.atan,
-                 'deg': math.degrees,
-                 'rad': math.radians,
-                 'floor': math.floor,
-                 'ceil': math.ceil,
-                 'abs': math.fabs}
+    functions = {
+        "pow": math.pow,
+        "log": math.log,
+        "sin": math.sin,
+        "cos": math.cos,
+        "tan": math.tan,
+        "asin": math.asin,
+        "acos": math.acos,
+        "atan": math.atan,
+        "deg": math.degrees,
+        "rad": math.radians,
+        "floor": math.floor,
+        "ceil": math.ceil,
+        "abs": math.fabs,
+    }
 
     def cmd_math(self, msg):
         """[expr]
@@ -44,7 +52,7 @@ class MathPlugin(Plugin, CommandMixin):
             self.bot.mention_reply(msg, "Error: {}".format(exc))
 
     def eval(self, expr):
-        return self._eval(ast.parse(expr, mode='eval').body)
+        return self._eval(ast.parse(expr, mode="eval").body)
 
     def _eval(self, node):
         if isinstance(node, ast.Num):
@@ -55,7 +63,7 @@ class MathPlugin(Plugin, CommandMixin):
             # <left> <operator> <right>
             oper = MathPlugin.operators.get(type(node.op))
             if oper is None:
-                raise MathError('Weird error')
+                raise MathError("Weird error")
 
             return oper(self._eval(node.left), self._eval(node.right))
 
@@ -63,19 +71,19 @@ class MathPlugin(Plugin, CommandMixin):
             # <operator> <operand> e.g., -1
             oper = MathPlugin.operators.get(type(node.op))
             if oper is None:
-                raise MathError('Weird error')
+                raise MathError("Weird error")
 
             return oper(self._eval(node.operand))
 
         if isinstance(node, ast.Call):
             if not isinstance(node.func, ast.Name):
-                raise MathError('Invalid function name')
+                raise MathError("Invalid function name")
 
             args = [self._eval(arg) for arg in node.args]
 
             func = MathPlugin.functions.get(node.func.id)
             if func is None:
-                raise MathError('Function does not exist')
+                raise MathError("Function does not exist")
 
             return func(*args)
 
@@ -83,7 +91,7 @@ class MathPlugin(Plugin, CommandMixin):
             # <id>
             ret = MathPlugin.constants.get(node.id)
             if ret is None:
-                raise MathError('Invalid constant')
+                raise MathError("Invalid constant")
 
             return ret
 

@@ -20,12 +20,13 @@ class URLMixin:
     task as almost every one will need to do some form of background processing
     or data transfer.
     """
+
     def url_match(self, msg, url):
         raise NotImplementedError
 
 
 class URLPlugin(Plugin):
-    url_regex = re.compile(r'https?://[^ ]+')
+    url_regex = re.compile(r"https?://[^ ]+")
 
     def irc_privmsg(self, msg):
         for match in URLPlugin.url_regex.finditer(msg.trailing):
@@ -34,8 +35,7 @@ class URLPlugin(Plugin):
 
             matching_plugin = False
             for plugin in self.bot.plugins:
-                if (isinstance(plugin, URLMixin) and
-                        plugin.url_match(msg, parsed_url)):
+                if isinstance(plugin, URLMixin) and plugin.url_match(msg, parsed_url):
                     matching_plugin = True
 
             # As a fallback, use our own internal URL handler
@@ -44,31 +44,26 @@ class URLPlugin(Plugin):
                 loop.create_task(self.url_callback(msg, url))
 
     async def url_callback(self, msg, url):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                # Read up to 1m
-                try:
-                    data = await resp.content.readexactly(1024*1024)
-                except asyncio.IncompleteReadError as exc:
-                    data = exc.partial
+        async with aiohttp.ClientSession() as session, session.get(url) as resp:
+            # Read up to 1m
+            try:
+                data = await resp.content.readexactly(1024 * 1024)
+            except asyncio.IncompleteReadError as exc:
+                data = exc.partial
 
-                if not data:
-                    return
+            if not data:
+                return
 
-                # lxml has an implementation of xpath, so we use that to search for
-                # the title tag.
-                tree = lxml.html.fromstring(data)
-                title = tree.find(".//title")
-                if title is None or title.text is None:
-                    return
+            # lxml has an implementation of xpath, so we use that to search for
+            # the title tag.
+            tree = lxml.html.fromstring(data)
+            title = tree.find(".//title")
+            if title is None or title.text is None:
+                return
 
-                text = title.text.translate({
-                    '\t': None,
-                    '\n': None,
-                    '\v': None,
-                }).strip()
+            text = title.text.translate({"\t": None, "\n": None, "\v": None}).strip()
 
-                if not text:
-                    return
+            if not text:
+                return
 
-                self.bot.reply(msg, 'Title: {}'.format(text))
+            self.bot.reply(msg, "Title: {}".format(text))

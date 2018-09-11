@@ -8,18 +8,18 @@ from .db import Base, DatabaseMixin
 
 
 class Karma(Base):
-    __tablename__ = 'karma'
+    __tablename__ = "karma"
 
     name = Column(String, primary_key=True)
     score = Column(Integer, default=0)
 
 
 class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
-    regex = re.compile(r'([^\s]+)(\+\+|--)(?:\s|$)')
+    regex = re.compile(r"([^\s]+)(\+\+|--)(?:\s|$)")
 
     def cmd_karma(self, msg):
         normalized_item = msg.trailing.lower().strip()
-        if normalized_item == '':
+        if normalized_item == "":
             normalized_item = msg.identity.name
 
         with self.db.session() as session:
@@ -29,10 +29,7 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
             if k:
                 score = k.score
 
-            self.bot.reply(
-                msg,
-                "{}'s karma is {}".format(normalized_item, score),
-            )
+            self.bot.reply(msg, "{}'s karma is {}".format(normalized_item, score))
 
     def irc_privmsg(self, msg):
         # We need to call super here so cmd_karma can be called
@@ -50,7 +47,7 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
 
                     # Figure out if we need to add or subtract
                     diff = -1
-                    if operation == '++':
+                    if operation == "++":
                         diff = 1
 
                     # Update the model
@@ -59,5 +56,4 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
                     session.flush()
 
                     k = session.query(Karma).get(normalized_item)
-                    self.bot.reply(msg,
-                                   "%s's karma is now %d" % (item, k.score))
+                    self.bot.reply(msg, "%s's karma is now %d" % (item, k.score))

@@ -11,6 +11,7 @@ def optional_args(func):
     If there are any args given, they are meant as arguments to the
     decorator, so we wrap the decorator.
     """
+
     @functools.wraps(func)
     def func_wrapper(*args, **kwargs):
         # If we have 1 arg and it's callable, wrap it
