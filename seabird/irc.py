@@ -5,17 +5,11 @@ LOG = logging.getLogger(__name__)
 
 
 # https://github.com/ircv3/ircv3-specifications/blob/master/core/message-tags-3.2.md#escaping-values
-TAG_MAPPING_VALUES = [
-    (";", "\\:"),
-    (" ", "\\s"),
-    ("\\", "\\\\"),
-    ("\r", "\\r"),
-    ("\n", "\\n"),
-]
+TAG_MAPPING_VALUES = {";": "\\:", " ": "\\s", "\\": "\\\\", "\r": "\\r", "\n": "\\n"}
 
 
 def _decode_tag(data):
-    for key, val in TAG_MAPPING_VALUES:
+    for key, val in TAG_MAPPING_VALUES.items():
         data = data.replace(key, val)
 
     return data
@@ -111,10 +105,7 @@ class Message:
         # If the location is the current nick, we know it's a private message.
         # This saves on mucking about with ISupport and other such nonsense and
         # lets us keep this as simple as possible.
-        if self.args[0] == self.current_nick:
-            return False
-
-        return True
+        return self.args[0] != self.current_nick
 
 
 class Protocol(asyncio.Protocol):

@@ -11,7 +11,7 @@ from seabird.plugin import Plugin
 
 
 # This is the base all models should inherit from
-Base = declarative_base()  # pylint: disable=invalid-name
+Base = declarative_base()
 
 
 class Session(AlembicSession):
@@ -65,6 +65,4 @@ class DatabaseMixin:
     def __init__(self):
         super().__init__()
 
-        self.db = self.bot.load_plugin(
-            DatabasePlugin
-        )  # noqa # pylint: disable=invalid-name
+        self.db = self.bot.load_plugin(DatabasePlugin)  # pylint: disable=invalid-name

@@ -66,7 +66,6 @@ class BleepPlugin(Plugin, CommandMixin, DatabaseMixin):
             bleep.replacement = replacement
             session.add(bleep)
 
-        # pylint: disable=no-member
         # Invalidate the cache on _get_bleeps so that we read the new value
         self._get_bleeps.cache_clear()
         self.bot.reply(

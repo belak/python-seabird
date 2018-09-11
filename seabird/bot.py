@@ -15,10 +15,7 @@ LOG = logging.getLogger(__name__)
 class Bot(Protocol):
     def __init__(self, config, loop=None):
         # If there was no loop, default to grabbing one
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        self.loop = loop
-
+        self.loop = loop or asyncio.get_event_loop()
         self.config = config
 
         self.plugins = []
@@ -61,9 +58,7 @@ class Bot(Protocol):
         plugin_modules = self.config.get("PLUGIN_MODULES")
         if plugin_classes is None and plugin_modules is None:
             plugin_modules = []
-            for _, name, _ in walk_packages(
-                modules.__path__, "seabird.modules."
-            ):  # noqa
+            for _, name, _ in walk_packages(modules.__path__, "seabird.modules."):
                 plugin_modules.append(name)
 
         # These are modules which contain multiple plugins. All
