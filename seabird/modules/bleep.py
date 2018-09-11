@@ -72,7 +72,7 @@ class BleepPlugin(Plugin, CommandMixin, DatabaseMixin):
             msg, "Will now bleep out {} with {}".format(bad_word, replacement)
         )
 
-    def irc_privmsg(self, msg):
+    def irc_privmsg(self, msg):  # pylint: disable=arguments-differ
         super().irc_privmsg(msg)
 
         if not msg.from_channel:

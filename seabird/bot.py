@@ -185,7 +185,7 @@ class Bot(Protocol):
 
     def reply(self, event, msg):
         """Convenience function which replies to a message"""
-        if len(event.args) < 1 or len(event.args[0]) < 1:
+        if not event.args or not event.args[0]:
             raise ValueError("Invalid IRC event")
 
         if event.from_channel:

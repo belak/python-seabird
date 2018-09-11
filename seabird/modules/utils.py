@@ -22,9 +22,9 @@ async def fetch_location(address):
 
         data = await resp.json()
         res = data["results"]
-        if len(res) == 0:
+        if not res:
             raise LocationException("No location results found")
-        elif len(res) == 0:
+        elif len(res) > 1:
             raise LocationException("More than 1 location result")
 
         loc = res[0]["geometry"]["location"]

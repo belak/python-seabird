@@ -31,7 +31,7 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
 
             self.bot.reply(msg, "{}'s karma is {}".format(normalized_item, score))
 
-    def irc_privmsg(self, msg):
+    def irc_privmsg(self, msg):  # pylint: disable=arguments-differ
         # We need to call super here so cmd_karma can be called
         super().irc_privmsg(msg)
 

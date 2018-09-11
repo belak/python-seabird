@@ -29,7 +29,10 @@ class CommandMixin:
         if not callback:
             return
 
-        callback(cmd)
+        if not callable(callback):
+            raise ValueError
+
+        callback(cmd)  # pylint: disable=not-callable
 
 
 class Plugin:
@@ -67,4 +70,7 @@ class Plugin:
         if not callback:
             return
 
-        callback(event)
+        if not callable(callback):
+            raise ValueError
+
+        callback(event)  # pylint: disable=not-callable

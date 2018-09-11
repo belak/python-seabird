@@ -15,7 +15,7 @@ def optional_args(func):
     @functools.wraps(func)
     def func_wrapper(*args, **kwargs):
         # If we have 1 arg and it's callable, wrap it
-        if len(args) == 1 and len(kwargs) == 0 and callable(func):
+        if len(args) == 1 and not kwargs and callable(func):
             return func(args[0])
 
         # If there's more than one arg, they're meant as args to the decorator

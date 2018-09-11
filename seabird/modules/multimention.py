@@ -137,7 +137,7 @@ class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
         `group_name` is args[0]
         `nicks` is args[1:]
         """
-        if len(args) < 1:
+        if not args:
             self.bot.reply(msg, 'Must at least supply group_name to "rm" command')
             return
 
@@ -173,7 +173,7 @@ class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
         else:
             self.bot.reply(msg, 'Unsupported command "{}"'.format(cmd))
 
-    def irc_privmsg(self, msg):
+    def irc_privmsg(self, msg):  # pylint: disable=arguments-differ
         super().irc_privmsg(msg)
 
         if not msg.from_channel:
