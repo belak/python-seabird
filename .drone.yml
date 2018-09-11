@@ -1,15 +1,9 @@
-build:
-  image: python:3.5
-  commands:
-    - pip install -r requirements.txt
-    - pip install flake8
-    - pip install pylint
-    - flake8 seabird
-    - pylint seabird
-deploy:
-  ssh:
-    host: $$FAB_HOST
-    user: deploy
+pipeline:
+  test:
+    image: python:3.7
     commands:
-      - cd fabfile && ~/.virtualenvs/fabfile/bin/fab seabird.build
-      - cd fabfile && ~/.virtualenvs/fabfile/bin/fab seabird.deploy
+      - pip install -r requirements.txt
+      - pip install flake8
+      - pip install pylint
+      - flake8 seabird
+      - pylint seabird
