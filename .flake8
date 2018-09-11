@@ -1,2 +1,4 @@
 [flake8]
 max-line-length=100
+# https://black.readthedocs.io/en/stable/the_black_code_style.html#slices
+ignore=E203

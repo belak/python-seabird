@@ -10,7 +10,7 @@ class Config(dict):
 
     @property
     def networks(self):
-        networks = self.get('NETWORKS')
+        networks = self.get("NETWORKS")
         if networks is None:
             return [self]
 

@@ -3,15 +3,15 @@ from .irc import Message
 
 class CommandMixin:
     def irc_privmsg(self, event):
-        if event.event != 'PRIVMSG':
+        if event.event != "PRIVMSG":
             return
 
-        if not event.trailing.startswith(self.bot.config['PREFIX']):
+        if not event.trailing.startswith(self.bot.config["PREFIX"]):
             return
 
         # Create a new message
-        cmd = Message(event.line)
-        split = cmd.trailing[len(self.bot.config['PREFIX']):].split(' ', 1)
+        cmd = Message(event.line, current_nick=event.current_nick)
+        split = cmd.trailing[len(self.bot.config["PREFIX"]) :].split(" ", 1)
         cmd.event = split[0]
 
         # Replace the last arg with everything after the command being called.
@@ -19,7 +19,7 @@ class CommandMixin:
         if len(split) > 1:
             cmd.args.append(split[1])
         else:
-            cmd.args.append('')
+            cmd.args.append("")
 
         # Send it off!
         self.dispatch_command(cmd)
@@ -29,7 +29,10 @@ class CommandMixin:
         if not callback:
             return
 
-        callback(cmd)
+        if not callable(callback):
+            raise ValueError
+
+        callback(cmd)  # pylint: disable=not-callable
 
 
 class Plugin:
@@ -43,6 +46,7 @@ class Plugin:
     having a reference to the bot object need to either use self.bot or be
     before Plugin in the MRO.
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -66,4 +70,7 @@ class Plugin:
         if not callback:
             return
 
-        callback(event)
+        if not callable(callback):
+            raise ValueError
+
+        callback(event)  # pylint: disable=not-callable

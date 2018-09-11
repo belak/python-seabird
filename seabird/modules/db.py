@@ -11,7 +11,7 @@ from seabird.plugin import Plugin
 
 
 # This is the base all models should inherit from
-Base = declarative_base()  # pylint: disable=invalid-name
+Base = declarative_base()
 
 
 class Session(AlembicSession):
@@ -34,8 +34,7 @@ class DatabasePlugin(Plugin):
     def __init__(self, bot):
         super().__init__(bot)
 
-        self.engine = create_engine(self.bot.config.get('DB_URI',
-                                                        'sqlite:///bot.db'))
+        self.engine = create_engine(self.bot.config.get("DB_URI", "sqlite:///bot.db"))
         self.engine.connect()
 
         # We need to use our own session class so we can add methods onto
@@ -55,7 +54,7 @@ class DatabasePlugin(Plugin):
         try:
             yield session
             session.commit()
-        except:
+        except Exception:
             session.rollback()
             raise
         finally:
@@ -66,4 +65,4 @@ class DatabaseMixin:
     def __init__(self):
         super().__init__()
 
-        self.db = self.bot.load_plugin(DatabasePlugin)  # noqa # pylint: disable=invalid-name
+        self.db = self.bot.load_plugin(DatabasePlugin)  # pylint: disable=invalid-name

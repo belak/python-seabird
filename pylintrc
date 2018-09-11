@@ -6,7 +6,15 @@ disable=missing-docstring,
         protected-access,
         fixme,
         suppressed-message,
-        locally-disabled
+        locally-disabled,
+        bad-continuation
+
+# bad-continuation is caused by the black formatter so we disable it for
+# now.
+
+# Also note that arguments-differ will pop up on some IRC callbacks for some
+# reason even when that isn't true, so manually disable that check in those
+# instances.
 
 [BASIC]
 good-names=i,j,k,v,ex,Run,_

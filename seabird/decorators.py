@@ -41,21 +41,18 @@ def command(callback, name=None, short_help=None, full_help=None):
     # This portion is roughly based off of pydoc.splitdoc.  Note that
     # we only pull from the __doc__ string if both short_help and
     # long_help are None.
-    if (short_help is None and
-            full_help is None and
-            callback.__doc__ is not None):
+    if short_help is None and full_help is None and callback.__doc__ is not None:
         lines = callback.__doc__.strip().splitlines()
         if len(lines) == 1:
             short_help = lines[0]
         elif len(lines) >= 2 and not lines[1].rstrip():
             short_help = lines[0]
-            full_help = ' '.join(lines[2:])
+            full_help = " ".join(lines[2:])
         else:
-            full_help = ' '.join(lines)
+            full_help = " ".join(lines)
 
     # Now that we have the metadata, actually add it to the command list.
-    callback._sb_meta.commands.append(
-        CommandMetadata(name, short_help, full_help))
+    callback._sb_meta.commands.append(CommandMetadata(name, short_help, full_help))
 
     return callback
 
@@ -67,6 +64,7 @@ def event(first, *args):
     returns a decorator which will add metadata to functions which is
     used for plugin initialization.
     """
+
     def decorator(callback):
         ensure_callback_metadata(callback)
 

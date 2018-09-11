@@ -15,6 +15,9 @@ class User:
 
 # Mapping of users to channels and other useful information
 class UserTrack(Plugin):
+    # TODO: This is currently broken because cap req was removed.
+    __disabled__ = True
+
     # See https://gist.github.com/belak/09edcc4f5e51056bf5bc728647659d81 for
     # more info
     def __init__(self, bot):
@@ -30,7 +33,7 @@ class UserTrack(Plugin):
     def connection_made(self, _):
         # We use multi-prefix to simplify a few operations. Because it's part
         # of the core IRCv3.1 spec, it should be supported almost everywhere.
-        self.bot.cap_req('multi-prefix')
+        self.bot.cap_req("multi-prefix")
 
     def get_user(self, nick):
         return self.users.get(nick)
@@ -40,14 +43,14 @@ class UserTrack(Plugin):
         if user:
             return user
 
-        LOG.info('Adding user %s', nick)
+        LOG.info("Adding user %s", nick)
 
         user = User(nick)
         self.users[nick] = user
         return user
 
     def remove_user(self, nick):
-        LOG.info('Deleting user %s', nick)
+        LOG.info("Deleting user %s", nick)
 
         del self.users[nick]
 
@@ -59,9 +62,9 @@ class UserTrack(Plugin):
     def irc_353(self, msg):
         # RPL_NAMREPLY
         channel = msg.args[2]
-        prefix = prefix_parse(self.isupport.supported.get('PREFIX'))
+        prefix = prefix_parse(self.isupport.supported.get("PREFIX"))
 
-        for nick in msg.args[3].split(' '):
+        for nick in msg.args[3].split(" "):
             if not nick:
                 continue
 
@@ -72,7 +75,7 @@ class UserTrack(Plugin):
                 user = self.add_user(nick)
 
             user.channels[channel] = modes
-            LOG.info('Modes for %s in %s are %s', nick, channel, modes)
+            LOG.info("Modes for %s in %s are %s", nick, channel, modes)
 
     def irc_join(self, msg):
         user = self.add_user(msg.identity.name)
@@ -83,29 +86,36 @@ class UserTrack(Plugin):
         newnick = msg.args[0]
 
         if not self.get_user(oldnick):
-            raise ValueError('Missing renamed nick {}'.format(oldnick))
+            raise ValueError("Missing renamed nick {}".format(oldnick))
 
         self.users[newnick] = self.get_user(oldnick)
         self.users[newnick].nick = newnick
 
         del self.users[oldnick]
 
-        LOG.info('Nick renamed %s --> %s', oldnick, newnick)
+        LOG.info("Nick renamed %s --> %s", oldnick, newnick)
 
     def irc_part(self, msg):
-        if msg.event == 'PART':
+        if msg.event == "PART":
             user = self.get_user(msg.identity.name)
         else:
             user = self.get_user(msg.args[1])
 
         channel = msg.args[0]
         if not user:
-            LOG.warning("Got a part/kick for nonexistent user: %s in %s",
-                        msg.identity.name, msg.args[0])
+            LOG.warning(
+                "Got a part/kick for nonexistent user: %s in %s",
+                msg.identity.name,
+                msg.args[0],
+            )
             return
-        elif channel not in user.channels:
-            LOG.warning("Got a part/kick for user not in a channel: %s in %s",
-                        msg.identity.name, msg.args[0])
+
+        if channel not in user.channels:
+            LOG.warning(
+                "Got a part/kick for user not in a channel: %s in %s",
+                msg.identity.name,
+                msg.args[0],
+            )
             return
 
         user.channels.pop(channel)
@@ -130,8 +140,8 @@ class UserTrack(Plugin):
     irc_kick = irc_part
 
     def irc_mode(self, msg):
-        modegroups = self.isupport.supported.get('CHANMODES')
-        prefix = prefix_parse(self.isupport.supported.get('PREFIX'))
+        modegroups = self.isupport.supported.get("CHANMODES")
+        prefix = prefix_parse(self.isupport.supported.get("PREFIX"))
 
         target = msg.args[0]
         modes = msg.args[1]
@@ -152,7 +162,11 @@ class UserTrack(Plugin):
             if mode in prefix:
                 user = self.get_user(param)
                 if not user:
-                    LOG.warning('User %s is not known. Skipping changing of mode %s', param, mode)
+                    LOG.warning(
+                        "User %s is not known. Skipping changing of mode %s",
+                        param,
+                        mode,
+                    )
                     continue
 
                 if adding:

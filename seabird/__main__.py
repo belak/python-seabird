@@ -1,5 +1,6 @@
-from asyncio import get_event_loop
+import asyncio
 import logging
+import os
 
 from colorlog import ColoredFormatter
 
@@ -12,20 +13,19 @@ def main():
     root_logger = logging.getLogger()
     root_handler = logging.StreamHandler()
     root_handler.setFormatter(
-        ColoredFormatter("%(log_color)s%(levelname)-8s%(reset)s %(message)s"))
+        ColoredFormatter("%(log_color)s%(levelname)-8s%(reset)s %(message)s")
+    )
     root_logger.addHandler(root_handler)
     root_logger.setLevel(logging.DEBUG)
 
-    loop = get_event_loop()
+    config_module = os.getenv("SEABIRD_CONFIG_MODULE", "config")
+    loop = asyncio.get_event_loop()
 
     conf = Config()
-    conf.from_module('config')
-    for network in conf.networks:
-        print(network)
-        bot = Bot(network, loop=loop)
-        bot.run()
+    conf.from_module(config_module)
 
-    loop.run_forever()
-    loop.close()
+    bot = Bot(conf, loop=loop)
+    bot.run()
+
 
 main()
