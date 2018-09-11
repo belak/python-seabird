@@ -109,7 +109,9 @@ class Message:
 
 
 class Protocol(asyncio.Protocol):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         # These are actually initialized in connection_made, but we put it here
         # so pylint won't complain.
         self._transport = None
