@@ -10,7 +10,7 @@ class CommandMixin:
             return
 
         # Create a new message
-        cmd = Message(event.line)
+        cmd = Message(event.line, current_nick=event.current_nick)
         split = cmd.trailing[len(self.bot.config['PREFIX']):].split(' ', 1)
         cmd.event = split[0]
 

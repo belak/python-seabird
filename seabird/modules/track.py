@@ -15,6 +15,9 @@ class User:
 
 # Mapping of users to channels and other useful information
 class UserTrack(Plugin):
+    # TODO: This is currently broken because cap req was removed.
+    __disabled__ = True
+
     # See https://gist.github.com/belak/09edcc4f5e51056bf5bc728647659d81 for
     # more info
     def __init__(self, bot):

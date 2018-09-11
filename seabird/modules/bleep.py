@@ -80,7 +80,7 @@ class BleepPlugin(Plugin, CommandMixin, DatabaseMixin):
     def irc_privmsg(self, msg):
         super().irc_privmsg(msg)
 
-        if not self.bot.from_channel(msg):
+        if not msg.from_channel:
             return
 
         trailing = msg.trailing.lower().strip()

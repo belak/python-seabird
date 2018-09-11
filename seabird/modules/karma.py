@@ -38,7 +38,7 @@ class KarmaPlugin(Plugin, CommandMixin, DatabaseMixin):
         # We need to call super here so cmd_karma can be called
         super().irc_privmsg(msg)
 
-        if not self.bot.from_channel(msg):
+        if not msg.from_channel:
             return
 
         if self.regex.search(msg.trailing):

@@ -14,32 +14,32 @@ LOG = logging.getLogger(__name__)
 
 class Bot(Protocol):
     def __init__(self, config, loop=None):
-        self.config = config
-
-        # Initialize the underlying connection
-        super().__init__(self.config['NICK'],
-                         self.config['USER'],
-                         self.config['NAME'],
-                         self.config['PASS'])
-
-        self.plugins = []
-
         # If there was no loop, default to grabbing one
         if loop is None:
             loop = asyncio.get_event_loop()
-
         self.loop = loop
 
-    def handshake(self):
-        # NOTE: This is actually the dispatch for connection_made, but because
-        # we need to do the processing for the IRCProtocol before this is
-        # called, we override handshake.
+        self.config = config
+
+        self.plugins = []
+        self.current_nick = self.config['NICK']
+
+        # Initialize the underlying protocol
+        super().__init__()
+
+    def connection_made(self, transport):
+        super().connection_made(transport)
+
+        password = self.config.get('PASS')
+        if password is not None:
+            self.write('PASS', password)
+
+        self.write('NICK', self.config['NICK'])
+        self.write('USER', self.config['USER'], '0.0.0.0', '0.0.0.0', self.config['NAME'])
 
         # Dispatch this event.
         for plugin in self.plugins:
             plugin.connection_made(self.transport)
-
-        super().handshake()
 
     def connection_lost(self, exc):
         super().connection_lost(exc)
@@ -48,59 +48,7 @@ class Bot(Protocol):
         for plugin in self.plugins:
             plugin.connection_lost(exc)
 
-        # If the config tells us to restart, we restart. Otherwise we
-        # completely bail so this isn't silently lost.
-        if self.config.get('RECONNECT_ON_FAILURE', True):
-            reconnect_delay = self.config.get('RECONNECT_DELAY', 5)
-
-            if reconnect_delay > 0:
-                # This will allow the loop to run until we want to reconnect.
-                self.loop.run_until_complete(asyncio.sleep(reconnect_delay))
-
-            bot = Bot(self.config, loop=self.loop)
-            bot.run()
-        else:
-            self.loop.stop()
-
-    def dispatch(self, msg):
-        if msg.event == '001':
-            for line in self.config.get('CMDS', []):
-                self.write_line(line)
-
-        # Dispatch all events
-        for plugin in self.plugins:
-            plugin.dispatch_event(msg)
-
-    def load_plugin(self, obj):
-        """Load and return a given plugin
-
-        This can take either a class or a string as the one argument.
-        """
-        if inspect.isclass(obj):
-            plugin_class = obj
-        else:
-            module, _, name = obj.rpartition('.')
-            module = import_module(module)
-            plugin_class = getattr(module, name)
-
-        if Plugin not in inspect.getmro(plugin_class):
-            raise TypeError('Class {} is not a valid Plugin'.format(obj))
-
-        # If it's already loaded, we should just return the already loaded
-        # instance.
-        for plugin in self.plugins:
-            if isinstance(plugin, plugin_class):
-                return plugin
-
-        # Initialize the plugin
-        plugin = plugin_class(self)
-
-        # Add the plugin to the list
-        self.plugins.append(plugin)
-
-        LOG.info('Loaded plugin %s', plugin_class)
-
-        return plugin
+        self.loop.stop()
 
     def run(self):
         """Run the bot and wait for it to die"""
@@ -159,35 +107,78 @@ class Bot(Protocol):
                                                 port=self.config['PORT'],
                                                 ssl=ssl_ctx)
 
-        # Run until complete here will only run until the we are connected, not
-        # until the connection is finished.
+        # Run until complete here will only run until the we are connected,
+        # not until the connection is finished.
         self.loop.run_until_complete(connector)
 
-    def run_forever(self):
-        """Run the bot and wait for it to die"""
-        self.run()
+        # In this case, forever means until it's stopped. Specifically in
+        # connection_lost.
         self.loop.run_forever()
 
+    def dispatch(self, msg):
+        # Ensure current_nick is up to date
+        if msg.event == '001':
+            self.current_nick = msg.args[0]
+        elif (msg.event == 'NICK' and
+              msg.identity.name == self.current_nick):
+            self.current_nick = msg.args[0]
+        elif msg.event == "437" or msg.event == "433":
+            self.current_nick += '_'
+            self.write('NICK', self.current_nick)
+
+        # If we just connected, send all lines
+        if msg.event == '001':
+            for line in self.config.get('CMDS', []):
+                self.write_line(line)
+
+        # Ping pong
+        if msg.event == 'PING':
+            self.write('PONG', *msg.args)
+
+        # Attach the current nick to the message for callbacks
+        msg.current_nick = self.current_nick
+
+        # Dispatch all events
+        for plugin in self.plugins:
+            plugin.dispatch_event(msg)
+
+    def load_plugin(self, obj):
+        """Load and return a given plugin
+
+        This can take either a class or a string as the one argument.
+        """
+        if inspect.isclass(obj):
+            plugin_class = obj
+        else:
+            module, _, name = obj.rpartition('.')
+            module = import_module(module)
+            plugin_class = getattr(module, name)
+
+        if Plugin not in inspect.getmro(plugin_class):
+            raise TypeError('Class {} is not a valid Plugin'.format(obj))
+
+        # If it's already loaded, we should just return the already loaded
+        # instance.
+        for plugin in self.plugins:
+            if isinstance(plugin, plugin_class):
+                return plugin
+
+        # Initialize the plugin
+        plugin = plugin_class(self)
+
+        # Add the plugin to the list
+        self.plugins.append(plugin)
+
+        LOG.info('Loaded plugin %s', plugin_class)
+
+        return plugin
+
     # IRC helpers go here
-
-    def from_channel(self, event):
-        # TODO: Figure out what to do about this. This will only really be
-        # valid for PRIVMSG messages and related other messages.
-        if len(event.args) < 2:
-            return False
-
-        # If the location is the current nick, we know it's a private message.
-        # This saves on mucking about with ISupport and other such nonsense and
-        # lets us keep this as simple as possible.
-        if event.args[0] == self.current_nick:
-            return False
-
-        return True
 
     def mention_reply(self, event, msg):
         """Reply to and mention the user in the given event"""
         # If the event came from a channel, prepend the nick it came from
-        if self.from_channel(event):
+        if event.from_channel:
             msg = '{}: {}'.format(event.identity.name, msg)
 
         self.reply(event, msg)
@@ -197,7 +188,7 @@ class Bot(Protocol):
         if len(event.args) < 1 or len(event.args[0]) < 1:
             raise ValueError('Invalid IRC event')
 
-        if self.from_channel(event):
+        if event.from_channel:
             self.write('PRIVMSG', event.args[0], msg)
         else:
             self.write('PRIVMSG', event.identity.name, msg)
