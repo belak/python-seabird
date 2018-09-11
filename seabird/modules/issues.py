@@ -1,5 +1,4 @@
 import asyncio
-import json
 
 import aiohttp
 
@@ -57,12 +56,12 @@ class IssuesPlugin(Plugin, CommandMixin):
         auth = aiohttp.BasicAuth(self.username, self.token)
 
         url = ISSUES_URL.format(self.target[0], self.target[1])
-        async with aiohttp.post(url, data=json.dumps(data), headers=headers,
-                                auth=auth) as resp:
-            if resp.status != 201:
-                self.bot.mention_reply(msg, 'Failed to file issue')
-                return
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=data, headers=headers, auth=auth) as resp:
+                if resp.status != 201:
+                    self.bot.mention_reply(msg, 'Failed to file issue')
+                    return
 
-            issue_data = await resp.json()
-            self.bot.mention_reply(
-                msg, 'Issue created. {}'.format(issue_data['html_url']))
+                issue_data = await resp.json()
+                self.bot.mention_reply(
+                    msg, 'Issue created. {}'.format(issue_data['html_url']))

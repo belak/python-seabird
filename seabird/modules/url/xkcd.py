@@ -1,11 +1,10 @@
 import asyncio
 import re
 
-import aiohttp
-
 from seabird.plugin import Plugin
 
 from . import URLPlugin, URLMixin
+from ..utils import fetch_json
 
 
 class XKCDURLPlugin(Plugin, URLMixin):
@@ -32,10 +31,7 @@ class XKCDURLPlugin(Plugin, URLMixin):
         return True
 
     async def url_callback(self, msg, url):
-        async with aiohttp.get(url) as resp:
-            data = await resp.json()
-            if not data:
-                return
+        data = await fetch_json(url)
 
-            self.bot.reply(msg, '[XKCD] {}: {}'.format(
-                data['title'], data['alt']))
+        self.bot.reply(msg, '[XKCD] {}: {}'.format(
+            data['title'], data['alt']))

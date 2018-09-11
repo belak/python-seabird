@@ -44,30 +44,31 @@ class URLPlugin(Plugin):
                 loop.create_task(self.url_callback(msg, url))
 
     async def url_callback(self, msg, url):
-        async with aiohttp.get(url) as resp:
-            # Read up to 1m
-            try:
-                data = await resp.content.readexactly(1024*1024)
-            except asyncio.IncompleteReadError as exc:
-                data = exc.partial
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                # Read up to 1m
+                try:
+                    data = await resp.content.readexactly(1024*1024)
+                except asyncio.IncompleteReadError as exc:
+                    data = exc.partial
 
-            if not data:
-                return
+                if not data:
+                    return
 
-            # lxml has an implementation of xpath, so we use that to search for
-            # the title tag.
-            tree = lxml.html.fromstring(data)
-            title = tree.find(".//title")
-            if title is None or title.text is None:
-                return
+                # lxml has an implementation of xpath, so we use that to search for
+                # the title tag.
+                tree = lxml.html.fromstring(data)
+                title = tree.find(".//title")
+                if title is None or title.text is None:
+                    return
 
-            text = title.text.translate({
-                '\t': None,
-                '\n': None,
-                '\v': None,
-            }).strip()
+                text = title.text.translate({
+                    '\t': None,
+                    '\n': None,
+                    '\v': None,
+                }).strip()
 
-            if not text:
-                return
+                if not text:
+                    return
 
-            self.bot.reply(msg, 'Title: {}'.format(text))
+                self.bot.reply(msg, 'Title: {}'.format(text))

@@ -182,8 +182,5 @@ class Protocol(asyncio.Protocol):
         line += '\r\n'
         self.transport.write(line.encode('utf-8'))
 
-    def handshake():
-        raise NotImplementedError
-
     def dispatch(self, msg):
         raise NotImplementedError

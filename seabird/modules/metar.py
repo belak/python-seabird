@@ -24,17 +24,18 @@ class MetarPlugin(Plugin, CommandMixin):
             self.bot.mention_reply(msg, 'Not a valid airport code')
             return
 
-        async with aiohttp.get(METAR_URL.format(loc)) as resp:
-            if resp.status != 200:
-                self.bot.mention_reply(msg, 'Could not find data for station')
-                return
+        async with aiohttp.ClientSession() as session:
+            async with session.get(METAR_URL.format(loc)) as resp:
+                if resp.status != 200:
+                    self.bot.mention_reply(msg, 'Could not find data for station')
+                    return
 
-            found = False
-            data = await resp.text()
-            for line in data.splitlines():
-                if line.startswith(loc):
-                    found = True
-                    self.bot.mention_reply(msg, line)
+                found = False
+                data = await resp.text()
+                for line in data.splitlines():
+                    if line.startswith(loc):
+                        found = True
+                        self.bot.mention_reply(msg, line)
 
-            if not found:
-                self.bot.mention_reply(msg, 'No results')
+                if not found:
+                    self.bot.mention_reply(msg, 'No results')

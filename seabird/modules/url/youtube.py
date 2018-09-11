@@ -1,12 +1,12 @@
 import asyncio
 from urllib.parse import parse_qs
 
-import aiohttp
 from isodate import parse_duration
 
 from seabird.plugin import Plugin
 
 from . import URLPlugin, URLMixin
+from ..utils import fetch_json
 
 
 YOUTUBE_URL = ("https://www.googleapis.com/youtube/v3/videos?"
@@ -37,14 +37,11 @@ class YoutubeURLPlugin(Plugin, URLMixin):
 
     async def url_callback(self, msg, video_id):
         url = YOUTUBE_URL.format(video_id, self.bot.config['YOUTUBE_KEY'])
-        async with aiohttp.get(url) as resp:
-            data = await resp.json()
-            if not data:
-                return
+        data = await fetch_json(url)
 
-            # Pull what we need out of the response
-            video = data['items'][0]
-            duration = parse_duration(video['contentDetails']['duration'])
-            title = video['snippet']['title']
+        # Pull what we need out of the response
+        video = data['items'][0]
+        duration = parse_duration(video['contentDetails']['duration'])
+        title = video['snippet']['title']
 
-            self.bot.reply(msg, '[YouTube] {} ~ {}'.format(title, duration))
+        self.bot.reply(msg, '[YouTube] {} ~ {}'.format(title, duration))

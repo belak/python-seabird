@@ -45,10 +45,10 @@ class MultiMentionPlugin(Plugin, CommandMixin, DatabaseMixin):
             for mmention in mmentions:
                 group_members[mmention.group_name].append(mmention.nick)
 
-            if group_name is None:
-                return group_members
-            else:
+            if group_name is not None:
                 return group_members[group_name]
+
+            return group_members
 
     def _rm_mention(self, group_name, nicks=None):
         '''

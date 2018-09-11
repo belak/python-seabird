@@ -106,7 +106,8 @@ class UserTrack(Plugin):
             LOG.warning("Got a part/kick for nonexistent user: %s in %s",
                         msg.identity.name, msg.args[0])
             return
-        elif channel not in user.channels:
+
+        if channel not in user.channels:
             LOG.warning("Got a part/kick for user not in a channel: %s in %s",
                         msg.identity.name, msg.args[0])
             return

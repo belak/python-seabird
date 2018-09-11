@@ -50,21 +50,24 @@ class MathPlugin(Plugin, CommandMixin):
         if isinstance(node, ast.Num):
             # <number>
             return node.n
-        elif isinstance(node, ast.BinOp):
+
+        if isinstance(node, ast.BinOp):
             # <left> <operator> <right>
             oper = MathPlugin.operators.get(type(node.op))
             if oper is None:
                 raise MathError('Weird error')
 
             return oper(self._eval(node.left), self._eval(node.right))
-        elif isinstance(node, ast.UnaryOp):
+
+        if isinstance(node, ast.UnaryOp):
             # <operator> <operand> e.g., -1
             oper = MathPlugin.operators.get(type(node.op))
             if oper is None:
                 raise MathError('Weird error')
 
             return oper(self._eval(node.operand))
-        elif isinstance(node, ast.Call):
+
+        if isinstance(node, ast.Call):
             if not isinstance(node.func, ast.Name):
                 raise MathError('Invalid function name')
 
@@ -75,12 +78,13 @@ class MathPlugin(Plugin, CommandMixin):
                 raise MathError('Function does not exist')
 
             return func(*args)
-        elif isinstance(node, ast.Name):
+
+        if isinstance(node, ast.Name):
             # <id>
             ret = MathPlugin.constants.get(node.id)
             if ret is None:
                 raise MathError('Invalid constant')
 
             return ret
-        else:
-            raise TypeError(node)
+
+        raise TypeError(node)

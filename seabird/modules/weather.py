@@ -68,29 +68,30 @@ class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
             return
 
         url = FORECAST_URL.format(self.key, loc.lat, loc.lon)
-        async with aiohttp.get(url) as resp:
-            if resp.status != 200:
-                self.bot.mention_reply(msg, 'Could not get weather data.')
-                return
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    self.bot.mention_reply(msg, 'Could not get weather data.')
+                    return
 
-            data = await resp.json()
-
-            self.bot.mention_reply(
-                msg, '3 day forecast for {}.'.format(loc.address))
-            for day in data['daily']['data'][:3]:
-                weekday = date.fromtimestamp(day['time']).strftime('%A')
-                print(day)
+                data = await resp.json()
 
                 self.bot.mention_reply(
-                    msg,
-                    "{}: High {:.2f}, Low {:.2f}, Humidity {:.0f}. {}".format(
-                        weekday,
-                        day['temperatureMax'],
-                        day['temperatureMin'],
-                        day['humidity']*100,
-                        day['summary'],
-                    ),
-                )
+                    msg, '3 day forecast for {}.'.format(loc.address))
+                for day in data['daily']['data'][:3]:
+                    weekday = date.fromtimestamp(day['time']).strftime('%A')
+                    print(day)
+
+                    self.bot.mention_reply(
+                        msg,
+                        "{}: High {:.2f}, Low {:.2f}, Humidity {:.0f}. {}".format(
+                            weekday,
+                            day['temperatureMax'],
+                            day['temperatureMin'],
+                            day['humidity']*100,
+                            day['summary'],
+                        ),
+                    )
 
     def cmd_weather(self, msg):
         loop = asyncio.get_event_loop()
@@ -104,25 +105,26 @@ class WeatherPlugin(Plugin, CommandMixin, DatabaseMixin):
             return
 
         url = FORECAST_URL.format(self.key, loc.lat, loc.lon)
-        async with aiohttp.get(url) as resp:
-            if resp.status != 200:
-                self.bot.mention_reply(msg, 'Could not get weather data.')
-                return
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    self.bot.mention_reply(msg, 'Could not get weather data.')
+                    return
 
-            data = await resp.json()
+                data = await resp.json()
 
-            today = data['daily']['data'][0]
-            currently = data['currently']
+                today = data['daily']['data'][0]
+                currently = data['currently']
 
-            self.bot.mention_reply(
-                msg,
-                "{}. Currently {:.1f}. High {:.2f}, Low {:.2f}, "
-                "Humidity {:.0f}. {}.".format(
-                    loc.address,
-                    currently['temperature'],
-                    today['temperatureMax'],
-                    today['temperatureMin'],
-                    currently['humidity']*100,
-                    currently['summary'],
-                ),
-            )
+                self.bot.mention_reply(
+                    msg,
+                    "{}. Currently {:.1f}. High {:.2f}, Low {:.2f}, "
+                    "Humidity {:.0f}. {}.".format(
+                        loc.address,
+                        currently['temperature'],
+                        today['temperatureMax'],
+                        today['temperatureMin'],
+                        currently['humidity']*100,
+                        currently['summary'],
+                    ),
+                )
