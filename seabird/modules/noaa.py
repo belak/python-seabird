@@ -40,10 +40,5 @@ class NOAAPlugin(Plugin, CommandMixin):
                 return
 
             data = await resp.text()
-            first = True
-            for line in data.splitlines():
-                if first:
-                    first = False
-                    continue
-
+            for line in data.splitlines()[1:]:
                 self.bot.mention_reply(msg, line.strip())
