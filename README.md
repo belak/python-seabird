@@ -1,6 +1,6 @@
 # seabird
 
-[![Build Status](https://travis-ci.org/belak/python-seabird.svg?branch=master)](https://travis-ci.org/belak/python-seabird)
+![Build Status](https://drone.coded.io/api/badges/belak/python-seabird/status.svg)
 
 AKA the bot formerly known as the bot formerly known as seabird
 
