@@ -3,7 +3,7 @@ pipeline:
     image: python:3.7
     commands:
       - pip install -r requirements.txt
-      - pip install flake8
-      - pip install pylint
+      - pip install flake8 pylint pytest pytest-sugar
       - flake8 seabird
       - pylint seabird
+      - pytest
