@@ -5,35 +5,47 @@ LOG = logging.getLogger(__name__)
 
 
 # https://github.com/ircv3/ircv3-specifications/blob/master/core/message-tags-3.2.md#escaping-values
-TAG_MAPPING_VALUES = {";": "\\:", " ": "\\s", "\\": "\\\\", "\r": "\\r", "\n": "\\n"}
+TAG_UNMAPPING_VALUES = {
+    '\\': '\\',
+    ':': ';',
+    's': ' ',
+    'r': '\r',
+    'n': '\n',
+}
 
 
 def _decode_tag(data):
-    for key, val in TAG_MAPPING_VALUES.items():
-        data = data.replace(key, val)
+    ret = ''
+    while data:
+        char, data = data[0], data[1:]
+        if char == '\\':
+            # Pop off the next character and check for any mapping values.
+            # Note that this handles a number of special cases automatically:
+            # end of string should drop the slash, no matching mapping value
+            # should drop the slash.
+            char, data = data[:1], data[1:]
+            ret += TAG_UNMAPPING_VALUES.get(char, char)
+        else:
+            ret += char
 
-    return data
+    return ret
 
 
 class Identity:
     # name!user@host
     def __init__(self, raw):
         self.raw = raw
-        self.user = None
-        self.host = None
-        self.name = None
+        self.user = ''
+        self.host = ''
+        self.name = raw
 
-        split = raw.split("@", 1)
-        if len(split) != 2:
-            return
+        split = self.name.split("@", 1)
+        if len(split) == 2:
+            self.name, self.host = split
 
-        self.user, self.host = split
-
-        split = self.user.split("!", 1)
-        if len(split) != 2:
-            return
-
-        self.name, self.user = split
+        split = self.name.split("!", 1)
+        if len(split) == 2:
+            self.name, self.user = split
 
 
 class Message:
@@ -75,7 +87,7 @@ class Message:
             trailing = args[1]
 
         # Split the args and grab the first one as the event
-        self.args = args[0].split(" ")
+        self.args = args[0].split()
         self.event = self.args[0]
         self.args = self.args[1:]
 
