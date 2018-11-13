@@ -289,12 +289,9 @@ class OldSchoolRunescapePlugin(Plugin, CommandMixin):
             return
 
         if len(matched_names) > 1:
-            self.bot.mention_reply(
-                msg,
-                f"{len(matched_names)} matches. Replying privately.",
-            )
+            self.bot.mention_reply(msg, f"{len(matched_names)} matches:")
             for name in matched_names:
-                self.bot.reply_to_user(msg, str(items[name]))
+                self.bot.mention_reply(msg, str(items[name]))
 
     async def get_items(self) -> Optional[Tuple[Trie, Dict[str, int]]]:
         if self.names is None or self.item_data is None:

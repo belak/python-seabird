@@ -192,10 +192,3 @@ class Bot(Protocol):
             self.write("PRIVMSG", event.args[0], msg)
         else:
             self.write("PRIVMSG", event.identity.name, msg)
-
-    def reply_to_user(self, event, msg):
-        """Convenience function which replies to a user via PRIVMSG"""
-        if not event.args or not event.args[0]:
-            raise ValueError("Invalid IRC event")
-
-        self.write("PRIVMSG", event.identity.name, msg)
