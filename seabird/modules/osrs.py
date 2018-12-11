@@ -1,6 +1,7 @@
 import asyncio
+from typing import Callable, Dict, NamedTuple, Optional, Tuple
+
 import aiohttp
-from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
 
 from seabird.irc import Message
 from seabird.plugin import Plugin, CommandMixin
@@ -62,8 +63,8 @@ class Item:
         self.average_price = average_price
 
     @classmethod
-    def from_json(self, item_data: Dict) -> "Item":
-        return Item(
+    def from_json(cls, item_data: Dict) -> "Item":
+        return cls(
             item_data["id"],
             item_data["name"],
             item_data["members"],
@@ -137,7 +138,7 @@ class OldSchoolRunescapePlugin(Plugin, CommandMixin):
                 msg,
                 "level",
                 "{player} has level {value} {skill}",
-                lambda v: str(v),
+                str,
             )
         )
 
@@ -304,7 +305,7 @@ class OldSchoolRunescapePlugin(Plugin, CommandMixin):
                 data = await resp.json()
                 ret = {}
                 names = Trie()
-                for item_id, item_data in data.items():
+                for item_data in data.values():
                     name = item_data["name"].lower()
                     ret[name] = Item.from_json(item_data)
                     names.add_word(name)
