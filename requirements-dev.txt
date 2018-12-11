@@ -11,3 +11,6 @@ alembic
 
 # Colors in logging
 colorlog
+
+# IRC parser test loading
+PyYAML
