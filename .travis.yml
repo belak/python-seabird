@@ -1,13 +1,16 @@
 language: python
 
 python:
-  - "3.5"
+  - "3.7"
+
+before_install:
+  - pip install flake8
+  - pip install pylint
 
 install:
   - pip install -r requirements.txt
-  - pip install flake8
-  - pip install pylint
 
 script:
   - flake8 seabird
   - pylint seabird
+  - python -m pytest
