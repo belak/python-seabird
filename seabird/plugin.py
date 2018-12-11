@@ -54,11 +54,9 @@ class Plugin:
 
     def connection_made(self, transport):
         """Stub method for protocol level connection_made"""
-        pass
 
     def connection_lost(self, exc):
         """Stub method for protocol level connection_lost"""
-        pass
 
     def dispatch_event(self, event):
         """Attempt to dispatch an event
