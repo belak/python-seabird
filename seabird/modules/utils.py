@@ -24,7 +24,8 @@ async def fetch_location(address):
         res = data["results"]
         if not res:
             raise LocationException("No location results found")
-        elif len(res) > 1:
+
+        if len(res) > 1:
             raise LocationException("More than 1 location result")
 
         loc = res[0]["geometry"]["location"]
