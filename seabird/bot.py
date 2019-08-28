@@ -114,6 +114,8 @@ class Bot(Protocol):
 
         # In this case, forever means until it's stopped. Specifically in
         # connection_lost.
+        # TODO: This should be fixed so we actually only run until the
+        # connection is done.
         self.loop.run_forever()
 
     def dispatch(self, msg):
