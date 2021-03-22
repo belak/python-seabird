@@ -6,7 +6,7 @@ chardet==3.0.4
 colorlog==3.1.4
 idna==2.8
 isodate==0.6.0
-lxml==4.2.5
+lxml==4.6.3
 Mako==1.0.7
 MarkupSafe==1.1.0
 multidict==4.5.2
